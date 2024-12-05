@@ -14,7 +14,7 @@ $PasswordProfile.ForceChangePasswordNextLogin = $true
 write-host "how many users?"
 $users= Read-Host
 $Int= [int]$users
-# Create 12 users
+
 1..$int | % {
 
     $params = @{
