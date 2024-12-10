@@ -1,0 +1,42 @@
+Try {
+Connect-MgGraph
+Get-MgContext
+}
+catch {
+Install-Module Microsoft.Graph.Authentication -Confirm:$false
+Install-Module Microsoft.Graph.Users -Confirm:$false
+Import-Module Microsoft.Graph.Authentication 
+Import-Module Microsoft.Graph.Users 
+}
+write-host "enter tenant name (after the @ including the TLD)"
+$tenant=read-host
+$employeeid=1
+write-host "how many users?"
+[int]$int= read-host
+write-host "what starting point"
+[int]$startingpt= Read-Host 
+ $startingpt..$int| ForEach-Object { $params= @{
+ accountEnabled= $true
+ displayName= "user$_"
+ mailNickName= "user$_"
+ userPrincipalName = "user$_@$tenant"
+PasswordProfile= @{
+    forceChangePasswordNextSignIn = $true   
+    password = "xWwvJ]6NMw+bWH-d"
+}
+}
+
+
+
+New-MgUser -BodyParameter $params
+
+}
+$employeeid = 0
+$NewUsers=Get-MgbetaUser -All
+ForEach ($user in $NewUsers)  {
+$employeeid += 1
+
+Update-MgBetaUser -userId $($user.Id)   -EmployeeId $employeeid
+
+}
+
