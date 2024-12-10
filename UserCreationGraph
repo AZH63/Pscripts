@@ -12,10 +12,10 @@ write-host "enter tenant name (after the @ including the TLD)"
 $tenant=read-host
 $employeeid=1
 write-host "how many users?"
-[int]$int= read-host
+[int]$UserCount= read-host
 write-host "what starting point"
 [int]$startingpt= Read-Host 
- $startingpt..$int| ForEach-Object { $params= @{
+ $startingpt..$UserCount| ForEach-Object { $params= @{
  accountEnabled= $true
  displayName= "user$_"
  mailNickName= "user$_"
@@ -25,24 +25,26 @@ PasswordProfile= @{
     password = "xWwvJ]6NMw+bWH-d"
 }
 }
-
-
-
 New-MgUser -BodyParameter $params
 
 }
 $employeeid = 0
-$NewUsers=Get-MgbetaUser -All
-ForEach ($user in $NewUsers)  {
+$EmployeesAdded= $startingpt..$UserCount
+$startingpt..$UserCount | % {
+
 $employeeid += 1
 
-Update-MgBetaUser -userId $($user.Id)   -EmployeeId $employeeid
+Update-MgBetaUser -userId "user$_@$tenant"   -EmployeeId $employeeid
 
 }
-$numbers= @(6,7,8,9,10,11,12)
-ForEach ($num in $numbers) {
-Write-Host " Disabling user$num@$tenant"
-Set-AzureADUser -ObjectId "user$num@$tenant" -AccountEnabled $false
+#find the midpt
+$midpoint= [math]::Ceiling($EmployeesAdded.Count /2)
+# split array in half using midpoint
+$enabledUsers=$EmployeesAdded[0..($midpoint -1)]
+$disabledUsers=$EmployeesAdded[$midpoint..($EmployeesAdded.Count - 1)]
+$disabledUsers | % {
+Write-Host " Disabling user$_@$tenant"
+Update-MgBetaUser -UserId "user$_@$tenant" -AccountEnabled $false
 
 }
 
