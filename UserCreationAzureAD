@@ -73,33 +73,33 @@ Set-AzureADUser -ObjectId "user$num@seriltoumagmail.onmicrosoft.com" -AccountEna
 }
 
 
-# -ExpandProperty will force a string rather than a hash table when using selecy
+
 #assigning offices 
-$NY=1..5 | ForEach-Object {
+1..5 | ForEach-Object {
 
 Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
 Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'New York' -Department "Sales"
 }
 
-$Boston= 6..11 | ForEach-Object {
+6..11 | ForEach-Object {
 
 Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
 Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Boston' -Department "Accounting"
 }
 
-$DC=12..17 | ForEach-Object {
+12..17 | ForEach-Object {
 
 Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
 Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Maryland' -Department "Transportation"
 }
 
-$PA=18..23 | ForEach-Object {
+18..23 | ForEach-Object {
 
 Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
 Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Pennsylvania' -Department "IT"
 }
 
-$BK= 24..25 | ForEach-Object {
+24..25 | ForEach-Object {
 
 Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
 Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Brooklyn' -Department "Engineering"

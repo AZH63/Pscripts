@@ -39,4 +39,11 @@ $employeeid += 1
 Update-MgBetaUser -userId $($user.Id)   -EmployeeId $employeeid
 
 }
+$numbers= @(6,7,8,9,10,11,12)
+ForEach ($num in $numbers) {
+Write-Host " Disabling user$num@$tenant"
+Set-AzureADUser -ObjectId "user$num@$tenant" -AccountEnabled $false
+
+}
+
 
