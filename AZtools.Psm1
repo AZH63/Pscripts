@@ -45,6 +45,7 @@ function Convert-MailboxToShared {
     )
 
     Set-Mailbox -Identity $UserPrincipalName -Type Shared
+    #remove license
 }
 
 function Disable-AzUser {
@@ -56,6 +57,9 @@ function Disable-AzUser {
 
 $randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
 
+#revokesessions
+
+# disable acct
 
 
 }
