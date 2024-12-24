@@ -95,24 +95,9 @@ ForEach ($group in $GroupsToSearch) {
     }
    }
 
-
-
-
-
-
-   
-
 }
 
-
-
-
-
 }
-
-
-
-
 
 Function Update-DDLS {
 
@@ -141,17 +126,39 @@ Function Update-DDLS {
 
     }
 
-
-
-
-
-
-
-
-
-
-    
     }
+Function Correct-email {
+[CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
+param ( 
+    [Parameter(mandatory)]
+    [string[]] $User,
+    [string]$domain= "baldorfood.com"
+)
+
+ForEach ($person in $User) {
+$mb=Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress
+$global:splitemail="$mb".split('@')
+$global:username=$splitemail[0]
+$global:CurrDomain= $splitemail[-1]
+write-host " the current primary email for $($person) is $($mb)"
+if ( $CurrDomain -like "*onmicrosoft.com*") {
+
+    set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
+    write-host "Primary address changed to $(Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress)"
+
+
+}
+else {
+write-host "eh its fine"
+$mb
+
+}
+
+
+
+}
+
+}
 
 
 Function Add-Forwarding {}
