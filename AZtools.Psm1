@@ -127,7 +127,7 @@ Function Update-DDLS {
     }
 
     }
-Function Correct-email {
+Function Update-PrimarySmtpAddress {
 [CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
 param ( 
     [Parameter(mandatory)]
