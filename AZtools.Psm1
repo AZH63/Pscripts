@@ -13,7 +13,7 @@ Azaria Horton
 function Connect-AZTools {
     <#
     .SYNOPSIS
-    Authenticates to Microsoft 365 and Azure AD.
+    Authenticates to exchange online and entra.
 
     .DESCRIPTION
     Connects to Microsoft Graph and Exchange Online.
@@ -109,13 +109,13 @@ Function Update-DDLS {
     
     ForEach ($group in $GroupsToSearch) {
     try {
-    Get-DynamicDistributionGroup -identity $group -ErrorAction Stop
+    Get-DynamicDistributionGroup -identity $group -ErrorAction Continue
       
        }
      catch {
     write-warning "its probably a 365 group, switching commandlets"
          try {
-         Get-UnifiedGroup -identity $group -ErrorAction Stop
+         Get-UnifiedGroup -identity $group -ErrorAction continue
          
          }
     catch {
@@ -137,9 +137,9 @@ param (
 
 ForEach ($person in $User) {
 $mb=Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress
-$global:splitemail="$mb".split('@')
-$global:username=$splitemail[0]
-$global:CurrDomain= $splitemail[-1]
+$splitemail="$mb".split('@')
+$username=$splitemail[0]
+$CurrDomain= $splitemail[-1]
 write-host " the current primary email for $($person) is $($mb)"
 if ( $CurrDomain -like "*onmicrosoft.com*") {
 
