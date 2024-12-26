@@ -24,6 +24,30 @@ function Connect-AZTools {
     Connect-ExchangeOnline -ShowProgress $true
     Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"
 }
+Function remove-Whitespace {
+    <#
+    .SYNOPSIS
+    removes leading and trailing whitespace from an argument enclosed in quotations
+#>
+    param (
+        $inputString
+    )
+    
+        if ($inputString -match '^\s+|\s+$') {
+    
+        write-host "found trailing or leading whitespace "
+        $Correction= $inputString.trim()
+        write-host "corrected trailing whitespace $Correction"
+        }
+        
+    else {
+    $Correction=$inputString
+    write-host "carry on"
+    
+    }
+    return $Correction
+    }
+
 function set-EmailForwarding {
     param(
         [Parameter(Mandatory)]
@@ -63,10 +87,6 @@ $randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
 
 
 }
-
-
-
-
 
 Function Get-GroupMembership {
 # any groups that are mail-enabled use the email address, no email Sec groups can use 
@@ -128,6 +148,14 @@ Function Update-DDLS {
 
     }
 Function Update-PrimarySmtpAddress {
+    <#
+    .Synopsis 
+    changes primary address from fallback domain (onmicrosoft) to proper one. Domain is defaulted to baldorfood.com so doesn't need to be mentioned
+    .Description
+    accepts email, displayname or full name as argument- for multiple arguments call as so: update-Primarysmtpaddress -User "Test Azaria", "testaz"
+    
+    
+    #>
 [CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
 param ( 
     [Parameter(mandatory)]
@@ -136,20 +164,25 @@ param (
 )
 
 ForEach ($person in $User) {
-$mb=Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress
+$mb= if ($person -notlike "*@*") {
+remove-Whitespace -inputString $person
+ Get-Mailbox -anr $Correction | Select -ExpandProperty PrimarySMTPaddress
+}
+
+else {
+Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress
+}
 $splitemail="$mb".split('@')
 $username=$splitemail[0]
 $CurrDomain= $splitemail[-1]
 write-host " the current primary email for $($person) is $($mb)"
 if ( $CurrDomain -like "*onmicrosoft.com*") {
 
-    set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
-    write-host "Primary address changed to $(Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress)"
-
-
+    # set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
+    write-host "Primary address changed to $(Get-mailbox -identity $username | Select -ExpandProperty PrimarySMTPaddress)"
 }
 else {
-write-host "eh its fine"
+write-host "domain is correct"
 $mb
 
 }
@@ -164,5 +197,41 @@ $mb
 Function Add-Forwarding {}
 
 Function Convert-Shared{
+
+}
+
+
+
+Function Search-MailboxesExport{
+<#
+ .SYNOPSIS
+ search mailboxes, enter as argument the words the mailbox must contain ex. "testAz", "onmicrosoft.com", function willyyy
+
+#>
+param (
+    [string] $Searchstr
+)
+write-host "searching for users"
+$AddsToCorr= Get-Mailbox | Where { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
+Write-host " these users need correcting $AddsToCorr , csv will be sent to your profile's download folder"
+$AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoTypeInformation
+}
+
+ Function Fix-Primarysmtp {
+   write-host "do you want to 1. enter users yourself or 2. grab from a csv"
+    $choice= read-host "pick a choice?"
+   switch ( $choice) {
+1{  $Users= Read-Host " what users are you looking to update? enter like "
+    Update-PrimarySmtpAddress -User $Users  }
+
+2 {    
+     $Searchstr= "onmicrosoft.com"
+     Search-MailboxesExport -Searchstr $Searchstr
+     $Users= import-Csv -Path $env:USERPROFILE\Downloads\AddsToCorr.csv | Select -ExpandProperty PrimarySmtpAddress
+     Update-PrimarySmtpAddress -User $Users
+    
+}
+
+   }
 
 }
