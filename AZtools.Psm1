@@ -48,7 +48,26 @@ function Convert-MailboxToShared {
     Set-Mailbox -Identity $UserPrincipalName -Type Shared
     #remove license
 }
+Function Update-CustomAttribute1 {
+param (
+    [parameter(mandatory)]
+    [string[]]$Users
+)
+$AzureInfo= $Users | ForEach-Object { 
+Get-AzureADUser -Filter "UserPrincipal eq '$_.PrimarySmtpAddress'" | Select-Object AccountEnabled, UserPrincipalName
+   
+ }
+ $AzureInfo | ForEach-Object {
+  if ( $_.AccountEnabled -eq $false) {
+   write-verbose " $($_.UserPrincipalName) is disabled"
+  }
+else { write-verbose " $($_.UserPrincipalName) is enabled" }
 
+
+
+  }
+
+}
 function Disable-AzUser {
     param(
         [Parameter(Mandatory)]
@@ -96,7 +115,7 @@ ForEach ($group in $GroupsToSearch) {
 
 }
 
-Function Update-DDLS {
+Function Update-DDLSAzureAD {
 
     [CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
     param ( 
@@ -105,26 +124,28 @@ Function Update-DDLS {
     
     
     ForEach ($group in $GroupsToSearch) {
+        $groupstr= $Group.Trim()
     try {
-    Get-DynamicDistributionGroup -identity $group -ErrorAction Continue
-      
+    $distmembers=Get-DynamicDistributionGroupMember -identity $groupstr | Select -ExpandProperty PrimarySmtpAddress
+    write-verbose "group $groupstr has these members:$( $distmembers | format-table)"
+    Update-CustomAttribute1 -Users $distmembers
        }
      catch {
-    write-warning "its probably a 365 group, switching commandlets"
-         try {
-         Get-UnifiedGroup -identity $group -ErrorAction continue
-         
-         }
-    catch {
-        Write-Error -Message "nope, try again"
-        }
+    write-warning "check grouptype"
+     }
+       
+    
+    }
+    $AzureInfo= $distmembers | ForEach-Object {Get-AzureADUser -identity $_.PrimarySmtpAddress | Select AccountEnabled, UserPrincipalName }
+    $AzureInfo
     
 }
 
-    }
 
-    }
-Function Update-PrimarySmtpAddress {
+
+
+
+    Function Update-PrimarySmtpAddress {
     <#
     .Synopsis 
     changes primary address from fallback domain (onmicrosoft) to proper one. Domain is defaulted to baldorfood.com so doesn't need to be mentioned
@@ -156,7 +177,7 @@ $CurrDomain= $splitemail[-1]
 write-host " the current primary email for $($person) is $($mb)"
 if ( $CurrDomain -like "*onmicrosoft.com*") {
 
-    # set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
+    set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
     write-host "Primary address changed to $(Get-mailbox -identity $username | Select-Object -ExpandProperty PrimarySMTPaddress)"
 }
 else {
