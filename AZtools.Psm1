@@ -24,29 +24,6 @@ function Connect-AZTools {
     Connect-ExchangeOnline -ShowProgress $true
     Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"
 }
-Function remove-Whitespace {
-    <#
-    .SYNOPSIS
-    removes leading and trailing whitespace from an argument enclosed in quotations
-#>
-    param (
-        $inputString
-    )
-    
-        if ($inputString -match '^\s+|\s+$') {
-    
-        write-host "found trailing or leading whitespace "
-        $Correction= $inputString.trim()
-        write-host "corrected trailing whitespace $Correction"
-        }
-        
-    else {
-    $Correction=$inputString
-    write-host "carry on"
-    
-    }
-    return $Correction
-    }
 
 function set-EmailForwarding {
     param(
@@ -165,12 +142,12 @@ param (
 
 ForEach ($person in $User) {
 $mb= if ($person -notlike "*@*") {
-remove-Whitespace -inputString $person
- Get-Mailbox -anr $Correction | Select -ExpandProperty PrimarySMTPaddress
+ $CleanStr= $person.Trim()
+ Get-Mailbox -anr $CleanStr | Select-Object -ExpandProperty PrimarySMTPaddress
 }
 
 else {
-Get-mailbox -identity $person | Select -ExpandProperty PrimarySMTPaddress
+Get-mailbox -identity $person | Select-Object -ExpandProperty PrimarySMTPaddress
 }
 $splitemail="$mb".split('@')
 $username=$splitemail[0]
@@ -179,7 +156,7 @@ write-host " the current primary email for $($person) is $($mb)"
 if ( $CurrDomain -like "*onmicrosoft.com*") {
 
     # set-mailbox $username -WindowsEmailAddress "$($username)@$($domain)" # -MicrosoftOnlineServicesID '$($username)@domain'
-    write-host "Primary address changed to $(Get-mailbox -identity $username | Select -ExpandProperty PrimarySMTPaddress)"
+    write-host "Primary address changed to $(Get-mailbox -identity $username | Select-Object -ExpandProperty PrimarySMTPaddress)"
 }
 else {
 write-host "domain is correct"
