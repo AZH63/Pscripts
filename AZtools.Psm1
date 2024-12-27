@@ -141,13 +141,14 @@ param (
 )
 
 ForEach ($person in $User) {
+    $CleanStr= $person.Trim()
 $mb= if ($person -notlike "*@*") {
- $CleanStr= $person.Trim()
+
  Get-Mailbox -anr $CleanStr | Select-Object -ExpandProperty PrimarySMTPaddress
 }
 
 else {
-Get-mailbox -identity $person | Select-Object -ExpandProperty PrimarySMTPaddress
+Get-mailbox -identity $CleanStr | Select-Object -ExpandProperty PrimarySMTPaddress
 }
 $splitemail="$mb".split('@')
 $username=$splitemail[0]
@@ -189,7 +190,7 @@ param (
     [string] $Searchstr
 )
 write-host "searching for users"
-$AddsToCorr= Get-Mailbox | Where { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
+$AddsToCorr= Get-Mailbox | Where-Object { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
 Write-host " these users need correcting $AddsToCorr , csv will be sent to your profile's download folder"
 $AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoTypeInformation
 }
