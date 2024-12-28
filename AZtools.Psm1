@@ -21,8 +21,17 @@ function Connect-AZTools {
     .EXAMPLE
     Connect-AZTools
     #>
-    Connect-ExchangeOnline -ShowProgress $true
-    Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"
+
+    do {
+    $choice= Read-Host "make sure roles are activated and choose a module to login  1. graph 2. exchange. 3. AzureAD 4. exit"
+    Switch ($choice) {
+    1 {Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"}
+    2 {Connect-ExchangeOnline }
+    3 {Connect-AzureAD }
+    4{break}
+    }
+}
+    while ($choice -ne 4) 
 }
 
 function set-EmailForwarding {
@@ -49,25 +58,32 @@ function Convert-MailboxToShared {
     #remove license
 }
 Function Update-CustomAttribute1 {
+    #have the other fx return email
 param (
     [parameter(mandatory)]
     [string[]]$Users
 )
-$AzureInfo= $Users | ForEach-Object { 
-Get-AzureADUser -Filter "UserPrincipal eq '$_.PrimarySmtpAddress'" | Select-Object AccountEnabled, UserPrincipalName
-   
- }
- $AzureInfo | ForEach-Object {
-  if ( $_.AccountEnabled -eq $false) {
-   write-verbose " $($_.UserPrincipalName) is disabled"
-  }
-else { write-verbose " $($_.UserPrincipalName) is enabled" }
-
-
-
-  }
-
+$AzureInfo=@()
+ForEach ($User in $Users) { 
+    $AzureUser = Get-AzureADUser -Filter "UserPrincipalName eq '$User'" | Select-Object AccountEnabled, UserPrincipalName
+    if ($AzureUser) {
+        $AzureInfo += $AzureUser
+    } else {
+        Write-Warning "User $User not found in Azure AD."
+    }
 }
+
+
+
+$AzureInfo | ForEach-Object {
+    if ( $_.AccountEnabled -eq $false) {
+     write-verbose " $($_.UserPrincipalName) is disabled"
+    }
+  else { write-verbose " $($_.UserPrincipalName) is enabled" }
+  
+    
+    }
+    }
 function Disable-AzUser {
     param(
         [Parameter(Mandatory)]
