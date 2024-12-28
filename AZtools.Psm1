@@ -63,16 +63,20 @@ param (
     [parameter(mandatory)]
     [string[]]$Users
 )
-$AzureInfo=@()
-ForEach ($User in $Users) { 
-    $AzureUser = Get-AzureADUser -Filter "UserPrincipalName eq '$User'" | Select-Object AccountEnabled, UserPrincipalName
-    if ($AzureUser) {
-        $AzureInfo += $AzureUser
-    } else {
-        Write-Warning "User $User not found in Azure AD."
+$AzureInfo= $Users | ForEach-Object {
+    $User= $_  # assigns the pipeline to the $User variable for convenience
+    
+    $AzureUser = Get-AzureADUSER -filter "UserPrincipalName eq '$User'" | Select-Object  AccountEnabled, UserPrincipalName
+     if ($AzureUser) {
+        $AzureUser
+     }
+    else {
+    write-warning " User $User not found in Azure "
+    
     }
-}
-
+    
+    }
+    
 
 
 $AzureInfo | ForEach-Object {
