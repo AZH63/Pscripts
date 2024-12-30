@@ -25,6 +25,11 @@ Function Add-Groups {
     }
     New-MgGroup -BodyParameter $params
     New-MgGroup -BodyParameter $paramsSec 
+    Connect-AzureAD -Identity
+Connect-ExchangeOnline -ManagedIdentity -Organization
+Get-DynamicDistributionGroupMember -identity "All_Employees" | Select-Object  -ExpandProperty Alias
+
+New-DynamicDistributionGroup -name “All_Employees” -RecipientFilter “((((RecipientType -eq 'UserMailbox') -and (-not(CustomAttribute1 -eq 'Disabled')))) -and (-not(Name -like 'SystemMailbox{')) -and (-not(Name -like 'CAS_{')) -and (-not(RecipientTypeDetailsValue -eq 'MailboxPlan')) -and (-not(RecipientTypeDetailsValue -eq 'DiscoveryMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'PublicFolderMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'ArbitrationMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuxAuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'SupervisoryReviewPolicyMailbox')))”
     write-host "$i"
 }
    

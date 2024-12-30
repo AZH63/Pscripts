@@ -1,5 +1,4 @@
-Connect-MgGraph -Identity
-Connect-ExchangeOnline -ManagedIdentity -Organization "seriltoumagmail.onmicrosoft.com"
+x "seriltoumagmail.onmicrosoft.com"
 $DisabledUsers = Get-MgBetaUser -Filter "accountEnabled eq false and employeeId ge '0'" | Select AccountEnabled,Mail,Id
 $EnabledUsers= Get-MgBetaUser -Filter "accountEnabled eq true and employeeId ge '0'" | Select AccountEnabled,Mail,Id
 ForEach ( $user in $DisabledUsers) {
