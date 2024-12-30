@@ -24,7 +24,7 @@ $AzureContext = Set-AzContext -SubscriptionName $AzureContext.Subscription `
 
 $AllUsers=Get-AzureADUser -Filter "employeeId ge '0'" -All $true | Select UserPrincipalName,AccountEnabled, AssignedLicenses
 
-$AllUsersCsv= $AllUsers | ForEach-Object {
+ $AllUsers | ForEach-Object {
 if ( $_.AccountEnabled -eq $false -and $_.AssignedLicenses -ne "null") {
 
 write-output " $($_.UserPrincipalName)  licensed and disabled $($_.AccountEnabled) "
