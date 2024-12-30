@@ -1,4 +1,6 @@
 Connect-MgGraph -Identity
+$OrgName = Get-AutomationVariable -Name "OrgName"
+Connect-ExchangeOnline -ManagedIdentity -Organization "$OrgName"
 Connect-ExchangeOnline -ManagedIdentity -Organization "seriltoumagmail.onmicrosoft.com"
 $DisabledUsers = Get-MgBetaUser -Filter "accountEnabled eq false and employeeId ge '0'" | Select AccountEnabled,Mail,Id
 $EnabledUsers= Get-MgBetaUser -Filter "accountEnabled eq true and employeeId ge '0'" | Select AccountEnabled,Mail,Id
