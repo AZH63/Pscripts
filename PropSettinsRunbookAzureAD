@@ -7,8 +7,8 @@ $graphToken = Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/"
 $aadToken = Get-AzAccessToken -ResourceUrl "https://graph.windows.net"
 
 Connect-AzureAD -AccountId $az.account.id -TenantId $az.tenant.id -AadAccessToken $aadToken.token -MsAccessToken $graphToken.token
-Connect-ExchangeOnline -ManagedIdentity -Organization "seriltoumagmail.onmicrosoft.com" 
-
+$OrgName = Get-AutomationVariable -Name "OrgName"
+Connect-ExchangeOnline -ManagedIdentity -Organization "$OrgName"
 
 
 Disable-AzContextAutosave -Scope Process | Out-Null
