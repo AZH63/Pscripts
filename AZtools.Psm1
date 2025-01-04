@@ -137,7 +137,7 @@ ForEach ($group in $GroupsToSearch) {
 
 Function Update-DDLSAzureAD {
 
-    [CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
+    
     param ( 
     [parameter(mandatory)]
     [string[]]$GroupsToSearch )
@@ -174,7 +174,7 @@ Function Update-DDLSAzureAD {
     
     
     #>
-[CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
+
 param ( 
     [Parameter(mandatory)]
     [string[]] $User,
