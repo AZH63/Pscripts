@@ -1,4 +1,4 @@
-FixingDept.Ps1
+Connect-MgGraph
 $All=Get-MgBetaUser -All | Select Department, Id
 $CostCenters=import-Csv -Path $env:USERPROFILE\Downloads\Costcenters.csv
 
