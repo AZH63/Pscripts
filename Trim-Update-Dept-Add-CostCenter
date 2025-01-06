@@ -18,9 +18,5 @@ else {
     Update-MgUser -UserId ($user.Id) -Department $CleanDept
  }   
 
-[PSCustomObject]@{
-    CostCode = $Center
-    Dept = $CleanDept
-}
 
 }
