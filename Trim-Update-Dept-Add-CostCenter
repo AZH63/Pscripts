@@ -1,0 +1,26 @@
+
+$AllUsers= Get-MgBetaUser | Select Id, Department
+$People = $AllUsers | Where-Object { $_.Department -ne $null}
+$CostCenters= import-Csv $env:USERPROFILE\Downloads\CostCenters.csv
+
+forEach ( $user in $People) {
+$parts= "$($user.Department)".Split('-') # splits each dept into 2l
+write-output "$parts"
+if ($parts.Count -eq 2) { #if its a hyphenated dept
+    $Center = $parts[0].Trim()
+    $CleanDept = $parts[1].Trim()
+    Update-MgUser -UserId ($user.Id) -Department $CleanDept
+}
+else {
+    $CleanDept = $parts[0].Trim()
+    # Look up the CostCode from the CSV file
+    $Center = ($CostCenters | Where-Object { $_.Dept -eq $CleanDept }).CostCode
+    Update-MgUser -UserId ($user.Id) -Department $CleanDept
+ }   
+
+[PSCustomObject]@{
+    CostCode = $Center
+    Dept = $CleanDept
+}
+
+}
