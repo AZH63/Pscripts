@@ -24,8 +24,8 @@ else {
     
  }   
 }
--------------------
-$CostCenters= import-Csv $env:USERPROFILE\Downloads\CostCenters.csv
+
+
 
 <# 
 for each user-
@@ -34,11 +34,6 @@ make var of split dept
  if var has 2 items  save index 0 move 1 to another attribute,  
  elseif var only has 1
  match with csv then move cc found in CSV to another attribute
-
---
-add a function to remove spaces from csv column leads if worth it
-in meantime fix the csv yourself and double check props
-
 
  #>
 
