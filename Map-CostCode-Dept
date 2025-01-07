@@ -4,26 +4,43 @@ $People = $AllUsers | Where-Object { $_.Department -ne $null}
 $CostCenters= import-Csv $env:USERPROFILE\Downloads\CostCenters.csv
 
 forEach ( $user in $People) {
-$parts= "$($user.Department)".Split('-') # splits each dept into 2l
-write-output "$parts"
+$parts= "$($user.Department)".Split('-') # splits each dept into 2
 if ($parts.Count -eq 2) { #if its a hyphenated dept
-    $Center = $parts[0].Trim()
-    $CleanDept = $parts[1].Trim()
+    $Center = $parts[1].Trim()
+    $CleanDept = $parts[0].Trim()
+  write-host "Department: $CleanDept  cost center: $Center user: $($user.Id) " 
+  
    Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
-   Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
+  Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
 }
 else {
-    $CleanDept = $parts[0].Trim()
+    $Match = $parts[0].Trim()
     # Look up the CostCode from the CSV file
-    $Center = ($CostCenters | Where-Object { $_.Dept -eq $CleanDept }).CostCode
+    $CleanDept = ($CostCenters | Where-Object { $_."Cost  Center Name" -eq $Match -or $_."Cost Center" -eq $Match })."Cost  Center Name"
+    $Center =($CostCenters | Where-Object { $_."Cost  Center Name" -eq $Match -or $_."Cost Center" -eq $Match })."Cost Center"
+    write-host "Department: $CleanDept  cost center: $Center user: $($user.Id) " 
     Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
     Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
     
  }   
-
-
 }
+-------------------
+$CostCenters= import-Csv $env:USERPROFILE\Downloads\CostCenters.csv
 
+<# 
+for each user-
+gets the Depts
+make var of split dept 
+ if var has 2 items  save index 0 move 1 to another attribute,  
+ elseif var only has 1
+ match with csv then move cc found in CSV to another attribute
+
+--
+add a function to remove spaces from csv column leads if worth it
+in meantime fix the csv yourself and double check props
+
+
+ #>
 
 
 
