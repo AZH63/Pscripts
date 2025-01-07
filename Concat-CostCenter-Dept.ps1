@@ -20,5 +20,8 @@ if ($UserDept) {
 }
 
 }
+#Get Users
+#read csv
+# make a new array of concatenated cost centers and depts 
 
-
+# for each user match dept to Cost Center name
