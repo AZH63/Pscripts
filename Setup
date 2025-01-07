@@ -1,0 +1,45 @@
+1. 
+1. Symlink sharepoint file to onedrive
+
+Function Get-SharePointFile {
+    # Requires -modules PnP.PowerShell
+    [Parameter(mandatory)]
+param (
+    
+    [string]$SharepointSite="https://1x4bs0.sharepoint.com/sites/HELP",
+    [string] $Filepath
+
+) 
+try {
+    Connect-PnPOnline -UrL $SharepointSite -interactive
+
+}
+catch {
+    write-error $_
+    write-host "installing SharePoint Pnp module"
+    Install-module PnP.PowerShell -Confirm:$false
+    Import-module PnP.PowerShell 
+    
+}
+
+
+}
+
+
+2. Sign into OneDrive
+3 Get-File ODFilePath
+4. Download locally to $env:UserProfile\Downloads ( wait, automatic or no?)
+5.   }
+
+Main SetUpScript{
+Get-OneDriveFile
+
+
+try {
+Connect-PnPOnline -Url "$Site"
+}
+catch {
+    Install-Module -Name Microsoft.Online.SharePoint.PowerShell
+
+}
+}

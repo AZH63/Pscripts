@@ -9,14 +9,22 @@ write-output "$parts"
 if ($parts.Count -eq 2) { #if its a hyphenated dept
     $Center = $parts[0].Trim()
     $CleanDept = $parts[1].Trim()
-    Update-MgUser -UserId ($user.Id) -Department $CleanDept
+   Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
+   Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
 }
 else {
     $CleanDept = $parts[0].Trim()
     # Look up the CostCode from the CSV file
     $Center = ($CostCenters | Where-Object { $_.Dept -eq $CleanDept }).CostCode
-    Update-MgUser -UserId ($user.Id) -Department $CleanDept
+    Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
+    Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
+    
  }   
 
 
 }
+
+
+
+
+
