@@ -1,5 +1,5 @@
 
-$AllUsers= Get-MgBetaUser | Select Id, Department
+$AllUsers= Get-MgBetaUser | Select-Object Id, Department
 $People = $AllUsers | Where-Object { $_.Department -ne $null}
 $CostCenters= import-Csv $env:USERPROFILE\Downloads\CostCenters.csv
 
