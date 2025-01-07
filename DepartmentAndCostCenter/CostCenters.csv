@@ -1,0 +1,13 @@
+﻿Cost Center,Cost  Center Name,Location,Type
+300,Accounting,BFH,Office
+400,Sales,,Office
+500,Research,,
+600,Finance,,
+700,Retail,,
+800,Marketing,,
+900,Operations,,
+975,Executive Management,,
+200,Operations,,WareHouse
+374,Executive Management,,
+381,HR,,
+475,Legal,,
