@@ -77,8 +77,6 @@ $AzureInfo= $Users | ForEach-Object {
     
     }
     
-
-
 $AzureInfo | ForEach-Object {
     if ( $_.AccountEnabled -eq $false) {
      write-verbose " $($_.UserPrincipalName) is disabled"
@@ -165,7 +163,7 @@ Function Update-DDLSAzureAD {
 
 
 
-    Function Update-PrimarySmtpAddress {
+Function Update-PrimarySmtpAddress {
     <#
     .Synopsis 
     changes primary address from fallback domain (onmicrosoft) to proper one. Domain is defaulted to baldorfood.com so doesn't need to be mentioned
