@@ -255,14 +255,48 @@ $AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoT
 
 }
 
+Function Remove-MailEnabled {
+param (
+[parameter(mandatory)]
+[string]$mail
+)
+
 $User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
 
-$GroupIds= (Get-MgUserMemberOf -UserId $User.Id).Id
-$GroupIds | % { Get-MgGroup -GroupId $_  }
+$GroupIds= (Get-MgUserMemberOf -UserId $($User.Id)).Id
+$Groupinfo= $GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled  }
+
+ForEach ($group in $GroupInfo) {
+
+if ($null -ne $group.Mail) {
+
+    if ($group.GroupTypes -cmatch "Unified" -and $group.GroupTypes -notcontains "DynamicMembership") {
+        Write-Host "$($group.Mail) is a 365 group with types: $($group.GroupTypes)"
+    } elseif ( $($group.MailEnabled) -eq $true  -and $group.GroupTypes -notcontains "DynamicMembership") {
+        Write-Host "$($group.Mail) is a mail-enabled security group MESG) with types: $($group.GroupTypes)"
+    } else {
+        Write-Host "$($group.Mail) does not match any specific conditions."
+    }
+
+
+}
+else {
+    write-host "this group $($group)is not mail enabled"
+  
+  }
+}
+}
+
+
 
 
 
 <# Measure-Command {Get-MgUserMemberOf -UserId $User.Id | Select Id }
 
-Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id }
+Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id } (winner)
+
+measure-command {$GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes  } } (slight winner)
+measure-command { $GroupIds | % { Get-MgGroup -GroupId $_   } }
+
+
 #>
