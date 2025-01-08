@@ -254,3 +254,15 @@ $AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoT
    }
 
 }
+
+$User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
+
+$GroupIds= (Get-MgUserMemberOf -UserId $User.Id).Id
+$GroupIds | % { Get-MgGroup -GroupId $_  }
+
+
+
+<# Measure-Command {Get-MgUserMemberOf -UserId $User.Id | Select Id }
+
+Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id }
+#>
