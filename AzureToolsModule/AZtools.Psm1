@@ -315,7 +315,7 @@ Function Remove-MailEnabledAzureAD {
          elseif ($group.MailEnabled -eq $true -and $group.SecurityEnabled -eq $true) {
 
          write-host " $($group.DisplayName) is mailEnabled"
-         Remove-DistributionGroupMember -identity $($group.ObjectId) -member $mail
+         Remove-DistributionGroupMember -identity $($group.ObjectId) -member $mail -Confirm:$false -BypassSecurityGroupManagerCheck
 
         }
         else {
@@ -334,7 +334,7 @@ Function Remove-MailEnabledAzureAD {
 
 
 
-
+#
 
 
 
