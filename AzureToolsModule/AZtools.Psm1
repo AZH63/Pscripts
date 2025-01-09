@@ -253,7 +253,7 @@ $AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoT
 
 }
 
-Function Remove-MailEnabled {
+Function Remove-MailEnabledMg {
 param (
 [parameter(mandatory)]
 [string]$mail
@@ -262,7 +262,7 @@ param (
 $User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
 
 $GroupIds= (Get-MgUserMemberOf -UserId $($User.Id)).Id
-$Groupinfo= $GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled  }
+$Groupinfo= $GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled  } ## for some reason can't pull these from memberof
 
 ForEach ($group in $GroupInfo) {
 
@@ -284,6 +284,69 @@ else {
   }
 }
 }
+
+Function Remove-MailEnabledAzureAD {
+
+    param (
+        [parameter(mandatory)]
+        [string]$mail
+        )
+     
+        if ($mail  -notlike "*@*") {
+        $mail= Read-Host "Please enter in an email no quotation marks needed" 
+        }
+        write-host "user is $mail" 
+         Connect-AZTools
+        $userid= (Get-AzureADUser -filter "UserPrincipalName eq '$mail'").ObjectId
+        $Groups=Get-AzureADUserMembership -ObjectId $mail | Select ObjectId, DisplayName, MailEnabled, SecurityEnabled
+
+        ForEach ($group in $Groups) {
+
+         if ($group.MailEnabled -eq $true -and $group.SecurityEnabled -eq $false) {
+          write-host " $($group.DisplayName) is 365"
+          Remove-AzureADGroupMember -ObjectId $($group.ObjectId) -MemberId $userid
+         }
+
+         elseif ($group.MailEnabled -eq $true -and $group.SecurityEnabled -eq $true) {
+
+         write-host " $($group.DisplayName) is mailEnabled"
+         Remove-DistributionGroupMember -identity $($group.ObjectId) -member $mail
+
+        }
+        else {
+        write-host " $($group.DisplayName): a sec group"
+
+        }
+
+
+
+
+}
+
+}
+
+<# Remove sec group menu driven function, maybe use indexes as switch choices #>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
