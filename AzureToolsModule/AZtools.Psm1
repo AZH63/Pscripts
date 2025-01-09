@@ -258,6 +258,11 @@ param (
 [parameter(mandatory)]
 [string]$mail
 )
+if ($mail  -notlike "*@*") {
+    $mail= Read-Host "Please enter in an email no quotation marks needed" 
+    }
+    write-host "user is $mail" 
+     Connect-AZTools
 
 $User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
 
