@@ -23,7 +23,7 @@ function Connect-AZTools {
     #>
 
     do {
-    $choice= Read-Host "make sure roles are activated and choose a module to login  1. graph 2. exchange. 3. AzureAD 4. exit"
+    $choice= Read-Host "make sure roles are activated and choose a module to login `n 1. graph 2. exchange. 3. AzureAD 4. exit"
     Switch ($choice) {
     1 {Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"}
     2 {Connect-ExchangeOnline }
@@ -167,10 +167,11 @@ Function Update-PrimarySmtpAddress {
     <#
     .Synopsis 
     changes primary address from fallback domain (onmicrosoft) to proper one. Domain is defaulted to baldorfood.com so doesn't need to be mentioned
+    
     .Description
-    accepts email, displayname or full name as argument- for multiple arguments call as so: update-Primarysmtpaddress -User "Test Azaria", "testaz"
-    
-    
+    accepts email, displayname or full name as argument- 
+    for multiple arguments call as so: update-Primarysmtpaddress -User "Test Azaria", "testaz"
+    Use update-primarysmtp for more options such as  upload via csv
     #>
 
 param ( 
@@ -181,7 +182,7 @@ param (
 
 ForEach ($person in $User) {
     $CleanStr= $person.Trim()
-$mb= if ($person -notlike "*@*") {
+$mb=if ($person -notlike "*@*") {
 
  Get-Mailbox -anr $CleanStr | Select-Object -ExpandProperty PrimarySMTPaddress
 }
@@ -222,33 +223,37 @@ Function Convert-Shared{
 Function Search-MailboxesExport{
 <#
  .SYNOPSIS
- search mailboxes, enter as argument the words the mailbox must contain ex. "testAz", "onmicrosoft.com", function willyyy
-
+ search mailboxes, enter as argument the words the mailbox must contain ex. "testAz", "onmicrosoft.com", function wil
 #>
 param (
     [string] $Searchstr
 )
 write-host "searching for users"
-$AddsToCorr= Get-Mailbox | Where-Object { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
-Write-host " these users need correcting $AddsToCorr , csv will be sent to your profile's download folder"
-$AddsToCorr | Export-Csv -path $env:UserProfile\Downloads\AddsToCorr.csv    -NoTypeInformation
+$FoundBoxes= Get-Mailbox | Where-Object { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
+Write-host " these users were found $($FoundBoxes.DisplayName) , csv will be sent to your profile's download folder"
+$FoundBoxes | Export-Csv -path $env:UserProfile\Downloads\FoundBoxes.csv    -NoTypeInformation
 }
 
- Function Fix-Primarysmtp {
-   write-host "do you want to 1. enter users yourself or 2. grab from a csv"
-    $choice= read-host "pick a choice?"
+ Function Update-Primarysmtp {
+    $choice=  read-host "choose a number choice: `n 1. enter users yourself or 2. run a search, generate csv and update adds 3. just search and grab CSV"
    switch ( $choice) {
-1{  $Users= Read-Host " what users are you looking to update? enter like "
+1{  $Users= Read-Host " what users are you looking to update? enter email "
     Update-PrimarySmtpAddress -User $Users  }
 
 2 {    
      $Searchstr= "onmicrosoft.com"
      Search-MailboxesExport -Searchstr $Searchstr
-     $Users= import-Csv -Path $env:USERPROFILE\Downloads\AddsToCorr.csv | Select -ExpandProperty PrimarySmtpAddress
+     $Users= import-Csv -Path $env:USERPROFILE\Downloads\FoundBoxes.csv | Select -ExpandProperty PrimarySmtpAddress
      Update-PrimarySmtpAddress -User $Users
     
 }
+3 {
+    
+    $Searchstr= "onmicrosoft.com"
+    Search-MailboxesExport -Searchstr $Searchstr
 
+
+}
    }
 
 }
@@ -319,7 +324,8 @@ Function Remove-MailEnabledAzureAD {
 
         }
         else {
-        write-host " $($group.DisplayName): a sec group"
+        write-host "$($group.DisplayName): a sec group"
+        Remove-AzureADGroupMember -ObjectID $($group.ObjectId) -member $userid -Confirm:$true
 
         }
 
