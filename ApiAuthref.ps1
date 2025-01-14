@@ -25,8 +25,8 @@ $headers=@{
 'Notion-Version'= '2022-06-28'
 
 }
-Invoke-RestMethod -Uri $uri -Headers $headers
-
+$result=Invoke-RestMethod -Uri $uri -Headers $headers
+$result | ConvertTo-Json
 #Api token
 $parameters=@{
 
@@ -43,7 +43,34 @@ Invoke-RestMethod @parameters
 
 
 # other method:
-$Cred= Get-Credential
+
+
+
+$token="$env:ZDKey"
+
+$uri= "https://d3v-newcomp.zendesk.com/api/lotus/assignables/autocomplete.json"
+$headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+$headers.Add("Accept", "application/json")
+$headers.Add("Authorization", "Basic hazariaaorton@gmail.com/token:$token")
+$response = Invoke-RestMethod $uri -Headers $headers 
+$response | ConvertTo-Json
+
+
+
+
+
+$token="$env:ZDKey"
+
+$user= 'hazariaaorton@gmail.com'
+$pass= $env:ZDPass
+
+$pair= "$User
+
+
+
+
+$Cred=Get-Credential
+
 $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
 $headers.Add("Accept", "application/json")
 $headers.Add("Authorization", "Basic $Cred")
