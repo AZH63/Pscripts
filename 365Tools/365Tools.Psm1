@@ -7,8 +7,7 @@ AZTools module for automating onboarding and offboarding processes.
 Contains functions to create users, assign licenses, manage groups, 
 disable users, convert mailboxes, and more.
 
-.AUTHOR
-Azaria Horton
+
 #>
 function Connect-AZTools {
     <#
