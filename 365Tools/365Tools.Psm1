@@ -230,7 +230,17 @@ param (
 write-host "searching for users"
 $FoundBoxes= Get-Mailbox | Where-Object { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
 Write-host " these users were found $($FoundBoxes.DisplayName) , csv will be sent to your profile's download folder"
-$FoundBoxes | Export-Csv -path $env:UserProfile\Downloads\FoundBoxes.csv    -NoTypeInformation
+$choice= Read-host "Do you want to export the list of users y/n"
+if ($choice -eq "y") {
+    $FoundBoxes | Export-Csv -path $env:UserProfile\Downloads\FoundBoxes.csv   -NoTypeInformation
+}
+else {
+write-host " no export, here are the users again: $($FoundBoxes | Format-Table)"
+
+}
+
+
+
 }
 
  Function Update-Primarysmtp {

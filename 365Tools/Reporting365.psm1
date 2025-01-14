@@ -17,25 +17,37 @@ Can enter in multiple searchStrings to get groupinfo including memberlist
 }
 write-host "Groups captured $Groups"
 $CSVName= Read-Host "name resulting CSV"
+
 $Results= $Groups | % {
     
     $groupinfo= $_
+   
     $members = Get-DistributionGroupMember -identity $($groupinfo.Name) | Select -ExpandProperty PrimarySmtpAddress
     [PSCustomObject]@{
         GroupName = $groupinfo.PrimarySmtpAddress
         GroupTypes= $groupinfo.GroupType
         Hidden= $groupinfo.HiddenFromAddressListsEnabled
-        CreatedDateUTC= $groupinfo.WhenChangedUTC
-        LastChanged= $groupinfo.WhenChangedUTC
+        CreatedDate= $groupinfo.WhenChanged
+        LastChanged= $groupinfo.WhenChanged
         ManagedBy= $($groupinfo.ManagedBy).DisplayName
         Members= $members -join ','
+        
    }
    
  }
+
+ #$messagetracehist= $Groups | % {  Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) }
+  
+# write-host "$messagetracehist"
  $Results | Export-CSV -Path $env:USERPROFILE\Downloads\$CSVName.Csv
 
+ Start-Process  $env:USERPROFILE\Downloads\$CSVName.Csv
+ }
 
-}
+ 
+
+
+
 
 
 
