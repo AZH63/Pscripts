@@ -40,7 +40,7 @@ ForEach($scope in $graphScopes){
   New-MgServicePrincipalAppRoleAssignment -PrincipalId $managedIdentityId -ServicePrincipalId $managedIdentityId -ResourceId $($graphApp.Id) -AppRoleId $($appRole.Id)
   }
   else {
-    Write-Host "do $-graphappp.AppRoles | Select Value dum dum"
+    Write-Host "do $-graphappp.AppRoles | Select Value "
   }
 }
 $exoApp = Get-MgServicePrincipal -Filter "AppId eq '00000002-0000-0ff1-ce00-000000000000'" #exo app idW
