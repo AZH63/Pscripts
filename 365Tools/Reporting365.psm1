@@ -65,6 +65,10 @@ $results = [PSCustomObject]@{
     SenderAddress= $trace.SenderAddress
     
 }
+
+
+
+write-host " $results"
 }
 }
 
