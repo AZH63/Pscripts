@@ -54,21 +54,17 @@ Function Get-Trace {
     param (
         [string[]]$Groups
         )
-
-    ForEach ($group in $Groups) {
+  ForEach ($group in $Groups) {
  
-    $trace=Get-MessageTrace -RecipientAddress $($group) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
+$trace=Get-MessageTrace -RecipientAddress $($group) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
 
-$results = [PSCustomObject]@{
+[PSCustomObject]@{
     mail = $group
     received= $trace.received
     SenderAddress= $trace.SenderAddress
     
 }
 
-
-
-write-host " $results"
 }
 }
 
