@@ -52,19 +52,26 @@ $Results= $Groups | % {
 Function Get-Trace { 
     
     param (
-        [string[]]$Groups
+        [Parameter(ValueFromPipeline = $true)]
+        [object[]]$Groups
         )
-  ForEach ($group in $Groups) {
- 
-$trace=Get-MessageTrace -RecipientAddress $($group) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
 
-[PSCustomObject]@{
-    mail = $group
-    received= $trace.received
-    SenderAddress= $trace.SenderAddress
+$Results= $Groups | % {
+    $PrimarySmtpAddress = $_.PrimarySmtpAddress
+   $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
+    
+     [PSCustomObject]@{
+       TraceFor = $PrimarySmtpAddress
+        received= $trace.received
+        SenderAddress= $trace.SenderAddress
+        
     
 }
+ 
 
-}
-}
+
+ }
+return $Results
+ 
+ }
 
