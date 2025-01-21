@@ -58,8 +58,13 @@ Function Get-Trace {
 
 $Results= $Groups | % {
     $PrimarySmtpAddress = $_.PrimarySmtpAddress
-   $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
-    
+  try { $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
+  }
+  catch {
+            
+    $trace=Get-MessageTrace -RecipientAddress $_ -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
+}
+  }
      [PSCustomObject]@{
        TraceFor = $PrimarySmtpAddress
         received= $trace.received
@@ -67,11 +72,11 @@ $Results= $Groups | % {
         
     
 }
- 
-
-
- }
 return $Results
- 
+
+
  }
+
+ 
+ 
 
