@@ -1,5 +1,5 @@
 
-$Users= Get-AzureADUser -All $true |  Select ExtensionProperty, UserPrincipalName
+$Users= Get-AzureADUser -All $true |  Select ExtensionProperty, UserPrincipalName, Department, UserType
 
 $info= $Users |
 ForEach-Object {
@@ -9,18 +9,22 @@ ForEach-Object {
 [PSCustomObject]@{
     UPN = $_.UserPrincipalName
     empId = $employeeId
-    
+    dept= $_.Department
+    <# empId = if ($null -eq $employeeid) { "$null" } else { $_.empId }
+    Dept = if ($null -eq $_.Department) { "$null" } else { $_.Department }#>
 }
 
     
 }
 $info
 
-$SharedMb= ($info | Where  { $null -eq $_.empId } ).UPN
+$SharedMb= ($info | Where-Object {  $_.empId -le "1" -and $_.UserType -ne "Guest" } ).UPN
+#($info | Where-Object { $null -eq $_.empId -and $null -eq $_.Dept} ).UPN
 
-ForEach ( $S in $SharedMb) {
+ForEach ( $Shared in $SharedMb) {
 
-Set-AzureADUserExtension -ObjectId $S -ExtensionName "employeeId" -ExtensionValue "Shared Mailbox"
+Set-AzureADUserExtension -ObjectId $Shared -ExtensionName "employeeId" -ExtensionValue "Shared Mailbox"
+Set-AzureADUser -ObjectId $Shared -AccountEnabled $false
 
 
 }
