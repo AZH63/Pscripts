@@ -18,13 +18,13 @@ ForEach-Object {
 }
 $info
 
-$SharedMb= ($info | Where-Object {  $_.empId -le "1" -and $_.UserType -ne "Guest" } ).UPN
+$Resource= ($info | Where-Object {  $_.empId -le "1" -and $_.UserType -ne "Guest" } ).UPN
 #($info | Where-Object { $null -eq $_.empId -and $null -eq $_.Dept} ).UPN
 
-ForEach ( $Shared in $SharedMb) {
+ForEach ( $reso in $Resource) {
 
-Set-AzureADUserExtension -ObjectId $Shared -ExtensionName "employeeId" -ExtensionValue "Shared Mailbox"
-Set-AzureADUser -ObjectId $Shared -AccountEnabled $false
+Set-AzureADUserExtension -ObjectId $reso -ExtensionName "employeeId" -ExtensionValue "Resource"
+Set-AzureADUser -ObjectId $reso -AccountEnabled $false
 
 
 }
