@@ -29,4 +29,4 @@ Set-AzureADUser -ObjectId $reso -AccountEnabled $false
 
 }
 
- 
+ (Get-AzureADUser -ObjectId "AlexW@1x4bs0.onmicrosoft.com").ExtensionProperty["extension_GUID_employeeType"]
