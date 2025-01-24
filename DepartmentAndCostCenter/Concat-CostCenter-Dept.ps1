@@ -21,7 +21,7 @@ if ($UserDept) {
 }
  catch {
     write-warning "no match found for $($user.Mail)'s dept"
-    
+    Write-Error $_
     $data=[PSCustomObject]@{
         departmentlisted = $($user.Department)
         user = $($user.Mail)
