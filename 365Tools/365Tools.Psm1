@@ -176,7 +176,7 @@ Function Update-PrimarySmtpAddress {
 param ( 
     [Parameter(mandatory)]
     [string[]] $User,
-    [string]$domain= "baldorfood.com"
+    [string]$domain= "1x4bs0.onmicrosoft.com"
 )
 
 ForEach ($person in $User) {
