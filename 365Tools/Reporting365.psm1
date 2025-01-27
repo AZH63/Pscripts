@@ -1,48 +1,71 @@
 Function Get-GroupInfoExo {
-<#
-.SYNOPSIS 
-Can enter in multiple searchStrings to get groupinfo including memberlist
-
-
-#>
-    param (
-        [Parameter(mandatory)]
-        [string[]]$Searchstr
-    )
-    
-     $Groups=$Searchstr| % {
-        $Search= $_
-       Get-DistributionGroup | Where { $_.DisplayName -like "*$Search*" } 
-       Write-host "Groups found: $($_)"
-}
-write-host "Groups captured $Groups"
-$CSVName= Read-Host "name resulting CSV"
-
-$Results= $Groups | % {
-    
-    $groupinfo= $_
-   
-    $members = Get-DistributionGroupMember -identity $($groupinfo.Name) | Select -ExpandProperty PrimarySmtpAddress
-    [PSCustomObject]@{
-        GroupName = $groupinfo.PrimarySmtpAddress
-        GroupTypes= $groupinfo.GroupType
-        Hidden= $groupinfo.HiddenFromAddressListsEnabled
-        CreatedDate= $groupinfo.WhenChanged
-        LastChanged= $groupinfo.WhenChanged
-        ManagedBy= $($groupinfo.ManagedBy).DisplayName
-        Members= $members -join ','
-        
-   }
-   
- }
-
- #$messagetracehist= $Groups | % {  Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) }
+  <#
+  .SYNOPSIS 
+  Allows input of multiple search strings to get group information, including member lists, and exports the results to a CSV.
   
-# write-host "$messagetracehist"
- $Results | Export-CSV -Path $env:USERPROFILE\Downloads\$CSVName.Csv
-
- Start-Process  $env:USERPROFILE\Downloads\$CSVName.Csv
- }
+  .DESCRIPTION
+  This function retrieves information about distribution groups matching specified search strings, gathers details about group members, and exports the data to a CSV file.
+  
+  .PARAMETER Searchstr
+  An array of search strings used to find distribution groups.
+  
+  .EXAMPLE
+  Get-GroupInfoExo -Searchstr "Team", "Project"
+  #>
+      [CmdletBinding()]
+      param (
+          [Parameter(Mandatory, ValueFromPipeline=$true)]
+          [string[]]$Searchstr
+      )
+      
+      Begin {
+          Write-Verbose "Initializing variables and validating input..."
+          $Results = @() # Initialize the results array
+          $CSVName = Read-Host "Enter the name for the resulting CSV file (without extension)"
+      }
+  
+      Process {
+          foreach ($Search in $Searchstr) {
+              Write-Verbose "Searching for groups with search string: $Search"
+              
+              $Groups = Get-DistributionGroup | Where-Object { $_.DisplayName -like "*$Search*" }
+              
+              if ($Groups) {
+                  Write-Host "Groups found for '$Search': $($Groups.Count)" -ForegroundColor Green
+                  
+                  foreach ($Group in $Groups) {
+                      Write-Verbose "Processing group: $($Group.DisplayName)"
+                      
+                      $Members = Get-DistributionGroupMember -Identity $Group.Name | Select-Object -ExpandProperty PrimarySmtpAddress
+                      
+                      $Results += [PSCustomObject]@{
+                          GroupName    = $Group.PrimarySmtpAddress
+                          GroupTypes   = $Group.GroupType
+                          Hidden       = $Group.HiddenFromAddressListsEnabled
+                          CreatedDate  = $Group.WhenCreated
+                          LastChanged  = $Group.WhenChanged
+                          ManagedBy    = ($Group.ManagedBy | ForEach-Object { $_.DisplayName }) -join ', '
+                          Members      = $Members -join ', '
+                      }
+                  }
+              } else {
+                  Write-Host "No groups found for '$Search'." -ForegroundColor Yellow
+              }
+          }
+      }
+  
+      End {
+          if ($Results) {
+              $OutputPath = "$env:USERPROFILE\Downloads\$CSVName.csv"
+              Write-Host "Exporting results to $OutputPath" -ForegroundColor Green
+              $Results | Export-Csv -Path $OutputPath -NoTypeInformation
+              Start-Process -FilePath $OutputPath
+          } else {
+              Write-Host "No results to export." -ForegroundColor Red
+          }
+      }
+  }
+  
 
  
 

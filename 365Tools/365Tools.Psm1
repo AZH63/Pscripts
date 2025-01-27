@@ -270,7 +270,7 @@ write-host " no export, here are the users again: $($FoundBoxes | Format-Table)"
 Function Remove-MailEnabledMg {
 param (
 [parameter(mandatory)]
-[string]$mail
+[string[]]$mail
 )
 if ($mail  -notlike "*@*") {
     $mail= Read-Host "Please enter in an email no quotation marks needed" 
