@@ -54,7 +54,7 @@ function Convert-MailboxToShared {
     )
 
     Set-Mailbox -Identity $UserPrincipalName -Type Shared
-    #remove license
+    #remove license 
 }
 Function Update-CustomAttribute1 {
     #have the other fx return email
@@ -85,21 +85,27 @@ $AzureInfo | ForEach-Object {
     
     }
     }
-function Disable-AzUser {
+Function Disable-AzUser {
     param(
         [Parameter(Mandatory)]
-        [string]$UserPrincipalName
+        [string]$UPN
     )
-#reset password
 
+$User= Get-AzureADUser -SearchString "$UPN"
+Write-Verbose -mesage "generating new password"
 $randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
-
-#revokesessions
-
-# disable acct
-
-
+$newpass= $randomPassword | ConvertTo-SecureString -AsPlainText -Force
+Write-Verbose -Message "resetting password"
+Set-AzureADUserPassword -ObjectId $($User.ObjectId) -Password $newpass
+Write-Verbose -Message "revoking sessions"
+Revoke-AzureADUserAllRefreshToken -objectId $($User.ObjectId)
+Write-Verbose -Message "disabling"
+Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
 }
+
+
+
+
 
 Function Get-GroupMembership {
 # any groups that are mail-enabled use the email address, no email Sec groups can use 
