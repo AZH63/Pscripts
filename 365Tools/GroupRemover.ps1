@@ -1,3 +1,7 @@
+$Emptygroups = [System.Collections.ArrayList]::new()
+$Groupsremoved = [System.Collections.ArrayList]::new()
+
+
 $Dist=Get-DistributionGroup | Select -ExpandProperty PrimarySMTPaddress
 $Distros=$Dist | ForEach-Object {
    $Members= (Get-DistributionGroupMember -identity $_).PrimarySmtpAddress
@@ -7,12 +11,16 @@ $Distros=$Dist | ForEach-Object {
     MemberCount= $Members.Count
   }
 }
+ $Filter= $Distros | Where {$_.MemberCount -le 5 } 
+     $Groups= $Filter | % { [pscustomobject]@{
+        Name= $PSItem.Group
+        Members= $PSItem.Members -join ','
+        MemberCount= $PsItem.MemberCount
+        
+         } }
+$Filter| export-Csv -path  $env:USERPROFILE\Downloads\GroupsLowCountUnchanged.csv -NoTypeInformation
 
-$Distros | export-Csv -NoTypeInformation $env:USERPROFILE\Downloads\Distros.csv
-$Emptygroups = [System.Collections.ArrayList]::new()
-$Groupsremoved = [System.Collections.ArrayList]::new()
-
-foreach ($distro in $Distros) {
+foreach ($distro in $Filter) {
     $validResponses = @('y', 'n', 'exit')
     
     do {
@@ -39,13 +47,12 @@ foreach ($distro in $Distros) {
                         Members = $distro.Members
                         DateChanged = Get-Date
                     })
-                    try {
-                     $($distro.Members) | % { Remove-DistributionGroupMember -identity $distro.group -member $_ }
-                    }
-                    catch {
-                        $($distro.Members) | % { Remove-DistributionGroupMember -identity $distro.group -member $_ -BypassSecurityGroupManagerCheck}
-                    }
                     
+                     write-warning "trying with -bypasssecuritygroupmanager switch"
+                    write-host " attempting $($distro.group) with switch"
+                  $($distro.Members) | % { Remove-DistributionGroupMember -identity $distro.group -member $_ -BypassSecurityGroupManagerCheck -Confirm:$false }
+                    
+                
                 }
                 break
             }
@@ -71,3 +78,8 @@ if ($Emptygroups.Count -gt 0) {
 if ($Groupsremoved.Count -gt 0) {
     $Groupsremoved | Export-Csv -Path "RemovedMembers_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
 }
+
+
+
+
+     
