@@ -100,74 +100,46 @@ return $Results
 
  }
 
- 
- Write-Verbose "Getting the distribution groups and generating csv"
- $Dist=Get-DistributionGroup | Select -ExpandProperty PrimarySMTPaddress
- $Distros=$Dist | ForEach-Object {
-    $Members= (Get-DistributionGroupMember -identity $_).PrimarySmtpAddress
-   [PSCustomObject]@{
-     group = $_
-     Members= $Members
-     MemberCount= $Members.Count
-   }
- }
- write-verbose " csv will be labled Distros and located in your profile's downloads folder"
- $Distros | export-Csv -NoTypeInformation $env:USERPROFILE\Downloads\Distros.csv
- 
- $Groupsremoved =[System.Collections.Generic.List[object]]::new()
-
- $Emptygroups= [System.Collections.Generic.List[object]]::new()
-
- 
- foreach ($distro in $Distros) {
-  $validResponses = @('y', 'n', 'exit')
- do {
-  Write-Host "`nProcessing group: $($distro.group)" -ForegroundColor Green
-  $try=Read-host " do you want to remove the members (y/n/exit)?"
- switch ($try.ToLower()) {
- "y"{ 
-  Write-host "members are $($distro.Members)" -ForegroundColor Cyan
-  if ( $null -eq $distro.Members) {
-    write-host "no members wtf is this group for?" -ForegroundColor Yellow
-    $Emptygroups=[PSCustomObject]@{
-      Group = $distro.group
-      Members= $distro.Members
-      DateChecked= Get-Date
+ Function Get-TraceNew{ 
+    #mt not rlly wkg too nicely here
+    param (
+        [parameter(Mandatory, ValueFromPipeline=$true)]
+        
+        [string[]]$Groups
+        )
+begin {
+    $GroupsTrace=[System.Collections.Generic.List[object]]::new()
+   
+}
+process {
+    try {
+        try { $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -Verbose
+           Start-Sleep -Milliseconds 500 
+             $GroupsTrace.Add([PSCustomObject]@{
+               TraceFor = $Groups
+               received= $trace.received
+               SenderAddress= $trace.SenderAddress
+           }) 
+        }
+        catch {
+            $trace=Get-MessageTrace -RecipientAddress $_ -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -Verbose
+            Start-Sleep -Milliseconds 500  
+            $GroupsTrace.Add([PSCustomObject]@{
+                TraceFor = $Groups
+                received= $trace.received
+                SenderAddress= $trace.SenderAddress
+                    })
+           }
+        }
+           catch {
+             Write-Warning "dunno" 
+      
     }
-    $Emptygroups.Add($nomem)
-  }
-  else {
-    write-host "members: $members, will be removed and stored in csv"
-    $lowmem=[PSCustomObject]@{
-      Group = $distro.group
-      Members= $distro.Members
-      DateChanged= (Get-Date)
+  
+   
     }
-    $Groupsremoved.Add($lowmem) 
-  }
-  break
- }
- "n" {
- write-host "skipping"
- break
- }
- "exit" { break}
- default { write-host "pick a valid choice"
- }
- 
 
+    
+    end { $GroupsTrace
+    }
  }
- 
- }
- while ($try -ne "y" -and $try -ne "n")
- 
- 
- 
- }
-
- $Groupsremoved | Export-Csv -path "$env:UserProfile\Downloads\GroupsRemoved.Csv"
- $Emptygroups | Export-Csv -path "$env:UserProfile\Downloads\EmptyGroups.Csv"
- 
- 
- 
- 
