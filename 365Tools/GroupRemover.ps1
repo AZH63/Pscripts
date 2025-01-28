@@ -64,7 +64,7 @@ foreach ($distro in $Distros) {
     } while ($try -notin $validResponses)
 }
 
-#in case no groups are removed
+<#check so that no csv generated if no changes logged #>
 if ($Emptygroups.Count -gt 0) {
     $Emptygroups | Export-Csv -Path "EmptyGroups_$(Get-Date -Format 'yyyyMMdd').csv" -NoTypeInformation
 }
