@@ -282,8 +282,7 @@ if ($mail  -notlike "*@*") {
     $mail= Read-Host "Please enter in an email no quotation marks needed" 
     }
     write-host "user is $mail" 
-     Connect-AZTools
-
+     
 $User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
 
 $GroupIds= (Get-MgUserMemberOf -UserId $($User.Id)).Id
@@ -321,7 +320,7 @@ Function Remove-MailEnabledAzureAD {
         $mail= Read-Host "Please enter in an email no quotation marks needed" 
         }
         write-host "user is $mail" 
-         Connect-AZTools
+        
         $userid= (Get-AzureADUser -filter "UserPrincipalName eq '$mail'").ObjectId
         $Groups=Get-AzureADUserMembership -ObjectId $mail | Select ObjectId, DisplayName, MailEnabled, SecurityEnabled
 
@@ -340,7 +339,7 @@ Function Remove-MailEnabledAzureAD {
         }
         else {
         write-host "$($group.DisplayName): a sec group"
-        Remove-AzureADGroupMember -ObjectID $($group.ObjectId) -member $userid -Confirm:$true
+        Remove-AzureADGroupMember -ObjectID $($group.ObjectId) -member $userid 
 
         }
 

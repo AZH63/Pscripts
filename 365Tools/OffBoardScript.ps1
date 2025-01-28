@@ -29,12 +29,14 @@ while ($true) {
 
             Write-Host "Removing mail-enabled groups for $UPN..."
            
-            Remove-MailEnabledMg -mail $UPN
+            Remove-MailEnabledAzureAD -mail $UPN
+            break
         }
         3 {
             Write-Host "Removing security groups for $UPN..."
             
             Remove-SecurityGroups -UPN $UPN
+            break
         }
         4 {
             
