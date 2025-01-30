@@ -1,3 +1,5 @@
+Import-Module 
+
 Function Get-GroupInfoExo {
   <#
   .SYNOPSIS 
