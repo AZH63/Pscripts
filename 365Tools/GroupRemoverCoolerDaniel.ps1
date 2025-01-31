@@ -2,18 +2,26 @@
  I want to try that new stuff I just learned about
 
 Class ExoGroupInfo {
-    [string]$GroupName
+    [psobject]$GroupName
     [System.Collections.Generic.List[string]]$Members
     [hashtable]$GroupProperties 
+    
+    
 
-
- ExoGroupinfo([string[]]$groupname) {
+ ExoGroupinfo([psobject[]]$groupname) {
    $this.Groupname= $groupname #binds method arg to property(parameter)
-   $this.Members=@()
-    foreach ($group in $groupname) {
+   $this.Members=[System.Collections.Generic.List[string]]::new()
+   $this.GroupProperties= @{}
+   
+   
+   foreach ($group in $groupname) {
+  
    try {
-     $groupData= Get-DistributionGroup -Identity $group | Select-Object * -ErrorAction Stop
-     $this.GroupProperties = @{
+     
+    $groupData= Get-DistributionGroup -Identity $group | Select-Object * -ErrorAction Stop
+     
+
+     $this.GroupProperties[$group] = @{  
         DisplayName = $groupData.DisplayName
         PrimarySmtpAddress = $groupData.PrimarySmtpAddress
         RequireSenderAuthenticationEnabled = $groupData.RequireSenderAuthenticationEnabled
@@ -21,17 +29,23 @@ Class ExoGroupInfo {
         Members = $this.GetGroupMembers($this.GroupName)
 
       }
-      $this.GroupProperties
+      
     }
    catch {
       write-error "$_"
    }
 }
+$result= $this.GroupProperties
   
   }
-  [void] GetGroupMembers([string]$mail) {
+  [void] GetGroupMembers([string]$groupname) {
+    
+    $this.GroupName= $groupname
+
+
     try{  
-    $this.members= Get-DistributionGroupMember -Identity $mail | Select -ExpandProperty PrimarySMTPaddress
+    
+     Get-DistributionGroupMember -Identity $this.GroupName | Select -ExpandProperty PrimarySMTPaddress
      
     ForEach ($mem in $this.members) {
          $this.Members.Add($mem)

@@ -1,6 +1,6 @@
-Import-Module 
 
-Function Get-GroupInfoExo {
+
+Function Get-GroupInfoExport {
   <#
   .SYNOPSIS 
   Allows input of multiple search strings to get group information, including member lists, and exports the results to a CSV.
@@ -22,7 +22,8 @@ Function Get-GroupInfoExo {
       
       Begin {
           Write-Verbose "Initializing variables and validating input..."
-          $Results = @() # Initialize the results array
+          $Results = [System.Collections.ArrayList]::new()
+
           $CSVName = Read-Host "Enter the name for the resulting CSV file (without extension)"
       }
   
@@ -30,17 +31,17 @@ Function Get-GroupInfoExo {
           foreach ($Search in $Searchstr) {
               Write-Verbose "Searching for groups with search string: $Search"
               
-              $Groups = Get-DistributionGroup | Where-Object { $_.DisplayName -like "*$Search*" }
+              $Groups = Get-DistributionGroup -filter " DisplayName -like '*$Search*'"
               
               if ($Groups) {
-                  Write-Host "Groups found for '$Search': $($Groups.Count)" -ForegroundColor Green
+                  Write-Host "Groups found for '$Search': $($Groups)" -ForegroundColor Green
                   
                   foreach ($Group in $Groups) {
                       Write-Verbose "Processing group: $($Group.DisplayName)"
                       
                       $Members = Get-DistributionGroupMember -Identity $Group.Name | Select-Object -ExpandProperty PrimarySmtpAddress
                       
-                      $Results += [PSCustomObject]@{
+                      $Results.Add( [PSCustomObject]@{
                           GroupName    = $Group.PrimarySmtpAddress
                           GroupTypes   = $Group.GroupType
                           Hidden       = $Group.HiddenFromAddressListsEnabled
@@ -48,7 +49,7 @@ Function Get-GroupInfoExo {
                           LastChanged  = $Group.WhenChanged
                           ManagedBy    = ($Group.ManagedBy | ForEach-Object { $_.DisplayName }) -join ', '
                           Members      = $Members -join ', '
-                      }
+                      })
                   }
               } else {
                   Write-Host "No groups found for '$Search'." -ForegroundColor Yellow
@@ -68,7 +69,23 @@ Function Get-GroupInfoExo {
       }
   }
   
+Function Get-GroupInfo {
+  param (
+          [Parameter(Mandatory, ValueFromPipeline=$true)]
+          [string[]]$Searchstr
+      )
+  begin {
 
+  }
+process {
+
+}
+end {
+
+}
+
+
+}
  
 
 

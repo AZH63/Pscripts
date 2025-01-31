@@ -23,9 +23,10 @@ $Int= [int]$users
         PasswordProfile   = $PasswordProfile
         UserPrincipalName = "user$_@$tenant"
         MailNickName      = "user$_"
-    }
+                  }
     New-AzureADUser @params
-}
+                }
+    
 
 #Get all users and set EmployeeId
 
@@ -42,7 +43,7 @@ Set-AzureADUserExtension -ObjectId $user -ExtensionName "EmployeeId" -ExtensionV
   $empID += 1
   Set-AzureADUser -ObjectId $user -UsageLocation US
   
-  if ( $currentLicenses -eq $null) {
+  if ( $null -eq $currentLicenses) {
   try {
 Set-AzureADUserLicense -ObjectId $user -AssignedLicenses $Licenses
 
@@ -67,8 +68,8 @@ write-warning "already assigned"
 
 $numbers= @(6,7,8,9,10,11,12)
 ForEach ($num in $numbers) {
-Write-Host " Disabling user$num@seriltoumagmail.onmicrosoft.com"
-Set-AzureADUser -ObjectId "user$num@seriltoumagmail.onmicrosoft.com" -AccountEnabled $false
+Write-Host " Disabling user$num@$tenant"
+Set-AzureADUser -ObjectId "user$num@$tenant" -AccountEnabled $false
 
 }
 
@@ -77,43 +78,43 @@ Set-AzureADUser -ObjectId "user$num@seriltoumagmail.onmicrosoft.com" -AccountEna
 #assigning offices 
 1..5 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'New York' -Department "Sales"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectId "user$_@$tenant" -PhysicalDeliveryOfficeName 'New York' -Department "Sales"
 }
 
 6..11 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Boston' -Department "Accounting"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectId "user$_@$tenant" -PhysicalDeliveryOfficeName 'Boston' -Department "Accounting"
 }
 
 12..17 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Maryland' -Department "Transportation"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectId "user$_@$tenant" -PhysicalDeliveryOfficeName 'Maryland' -Department "Transportation"
 }
 
 18..23 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Pennsylvania' -Department "IT"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectId "user$_@$tenant" -PhysicalDeliveryOfficeName 'Pennsylvania' -Department "IT"
 }
 
 24..25 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectId "user$_@seriltoumagmail.onmicrosoft.com" -PhysicalDeliveryOfficeName 'Brooklyn' -Department "Engineering"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectId "user$_@$tenant" -PhysicalDeliveryOfficeName 'Brooklyn' -Department "Engineering"
 }
 
 <# $Sales= 1..5 | ForEach-Object {
 
-Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" -Department "Sales"
+Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectID "user$_@$tenant" -Department "Sales"
 
 }
- $Accounting= 6..11 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" -Department "Accounting" }
-$Transportation= 12..17 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" -Department "Transportation" }
-$IT= 18..23 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" | Select -ExpandProperty UserPrincipalName
-Set-AzureADUser -ObjectID "user$_@seriltoumagmail.onmicrosoft.com" -Department "IT" } #>
+ $Accounting= 6..11 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectID "user$_@$tenant" -Department "Accounting" }
+$Transportation= 12..17 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectID "user$_@$tenant" -Department "Transportation" }
+$IT= 18..23 | ForEach-Object {Get-AzureADUser -ObjectID "user$_@$tenant" | Select -ExpandProperty UserPrincipalName
+Set-AzureADUser -ObjectID "user$_@$tenant" -Department "IT" } #>
