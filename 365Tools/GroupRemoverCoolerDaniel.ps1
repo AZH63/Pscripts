@@ -1,5 +1,5 @@
 
- I want to try that new stuff I just learned about
+ #I want to try that new stuff I just learned about
 
 Class ExoGroupInfo {
     [psobject]$GroupName
@@ -26,7 +26,7 @@ Class ExoGroupInfo {
         PrimarySmtpAddress = $groupData.PrimarySmtpAddress
         RequireSenderAuthenticationEnabled = $groupData.RequireSenderAuthenticationEnabled
         ManagedBy = $groupData.ManagedBy
-        Members = $this.GetGroupMembers($this.GroupName)
+        Members = $this.GetGroupMembers($group)
 
       }
       
@@ -38,22 +38,20 @@ Class ExoGroupInfo {
 $result= $this.GroupProperties
   
   }
-  [void] GetGroupMembers([string]$groupname) {
+  [string[]]GetGroupMembers([string]$groupname) {
     
     $this.GroupName= $groupname
 
 
     try{  
     
-     Get-DistributionGroupMember -Identity $this.GroupName | Select -ExpandProperty PrimarySMTPaddress
-     
-    ForEach ($mem in $this.members) {
-         $this.Members.Add($mem)
-    }
-    write-output "got $($this.Members)"
+    $memberlist= Get-DistributionGroupMember -Identity $groupname | Select -ExpandProperty PrimarySMTPaddress
+    return $memberlist
+
 }
 catch {
     write-error "$_"
+    return $null
 }
        
  }
@@ -62,7 +60,13 @@ catch {
  }
 
 
+ 
 
 
 
+<#instantiate group obj
+ $Test=[ExoGroupInfo]::new("test")
+access properties
+$Test.GroupProperties["Test"]
 
+ #>
