@@ -31,7 +31,7 @@ Function Get-GroupInfoExport {
           foreach ($Search in $Searchstr) {
               Write-Verbose "Searching for groups with search string: $Search"
               
-              $Groups = Get-DistributionGroup -filter " DisplayName -like '*$Search*'"
+              $Groups = Get-DistributionGroup -ResultSize Unlimited  -filter " DisplayName -like '*$Search*'"
               
               if ($Groups) {
                   Write-Host "Groups found for '$Search': $($Groups)" -ForegroundColor Green
