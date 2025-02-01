@@ -15,11 +15,26 @@ Function Connect-Github {
 
     Invoke-RestMethod -Uri $uri -headers $headers
 }
-
+ 
 Function Get-Issues {
-$Call = Invoke-RestMethod -Headers $headers -Uri "$BaseUri/issues" -Method Get
-return $Call | Select-Object Title, Body_Text, Created_at, Updated_at, State
+    [parameter(Mandatory=$true)]
+    [string]$body,
+    [string]$owner="hootiehooo"
+    [int]$maxPages="100"
+
+    $uri= "$BaseUri/repos/$owner/$repo/issues?per_page=$maxPages&sort=created&direction=desc"
+$Call = Invoke-RestMethod -Headers $headers -Uri "$uri" -Method Get 
+return ( $Call | Select-Object Title, Body_Text, Created_at, Updated_at, State,assignee,Id) 
+
+
 }
+
+
+
+
+
+
+
 Function Create-Issue {
     param (
         [parameter(Mandatory=$true)]
@@ -43,6 +58,71 @@ $JsonBody= $issuebody | ConvertTo-Json -Depth 2
  Invoke-WebRequest -Headers $headers -uri "$($BaseUri)/repos/$($owner)/$($repo)/issues" -Method 'Post' -Body $JsonBody 
 
 }
+
+Function Edit-Issue {
+    param (
+        [string]$title,
+        [string]$body,
+        [string]$owner="hootiehoooo",
+        [parameter(Mandatory=$true)]
+        [integer]$Issueno,
+        [integer]$repo="PSCripts"
+
+    )
+    
+  
+    $GET=Invoke-WebRequest -Headers $headers -uri "$(BaseUri)/repos/$($owner)/$repo\$Issueno"
+    
+    $issuebody=@{
+        "title"= $title;
+        "body"= $body;
+        "labels"= $label
+        "state_reason"=$statereason
+    }
+
+
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
