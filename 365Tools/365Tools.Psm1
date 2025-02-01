@@ -109,33 +109,25 @@ Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
 
 Function Get-GroupMembership {
 # any groups that are mail-enabled use the email address, no email Sec groups can use 
-    [CmdletBinding(SupportsShouldProcess)] #adds whatif or confirm
+    [CmdletBinding()] 
     param ( 
-    [parameter(mandatory)]
+    [parameter(mandatory, ValueFromPipeline)]
     [string[]]$GroupsToSearch )
 
-ForEach ($group in $GroupsToSearch) {
-
-   try {
-    Get-AzureADGroup -ObjectID $group -ErrorAction Stop
-   }
-   catch {
-    Write-Warning " not a sec group"
-    try {
-        Get-DistributionGroup -Identity $group  -ErrorAction Stop
-    }
-    catch {
-        try {
-        Get-UnifiedGroupLinks -Identity $group   
-        }
-        catch {
-           write-error -message "does this thing even exist??"
-        }
-    }
-   }
+begin {
+    
+ $Groups= $GroupsToSearch | ForEach-Object {
+    if ($null -eq $_.)
+ }
+ }
+}
+process {
+       
 
 }
-
+end {
+    
+}
 }
 
 Function Update-DDLSAzureAD {

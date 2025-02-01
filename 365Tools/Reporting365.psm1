@@ -91,7 +91,7 @@ end {
 
 
 
-Function Get-Trace { 
+Function Get-TraceOld { 
     
     param (
         [Parameter(ValueFromPipeline = $true)]
@@ -120,7 +120,7 @@ return $Results
  }
 
  Function Get-TraceNew{ 
-    #mt not rlly wkg too nicely here
+    # messagetrace not rlly wkg too nicely in either vers there has to be a better way
     param (
         [parameter(Mandatory, ValueFromPipeline=$true)]
         
