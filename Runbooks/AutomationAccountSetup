@@ -1,13 +1,5 @@
-Function Do-Crime  {
 
-[CmdletBinding()]
-param (
-    [Parameter()]
-    [TypeName]
-    $ParameterName
-)
-
-  try {Import-module Az.resources
+  try { Import-module Az.resources
 }
 catch {
 Install-Module -Name PowerShellGet -AllowPrerelease
