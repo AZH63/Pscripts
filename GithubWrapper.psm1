@@ -17,13 +17,15 @@ Function Connect-Github {
 }
  
 Function Get-Issues {
-    [parameter(Mandatory=$true)]
+    param (
     [string]$body,
-    [string]$owner="hootiehooo"
-    [int]$maxPages="100"
-
+    [string]$owner= "hootiehoooo",
+    [string]$repo= "PScripts",
+    [int]$maxPages= 100
+    )
+    #$issues= [System.Collections.ArrayList]::new()
     $uri= "$BaseUri/repos/$owner/$repo/issues?per_page=$maxPages&sort=created&direction=desc"
-$Call = Invoke-RestMethod -Headers $headers -Uri "$uri" -Method Get 
+$Call = Invoke-RestMethod -Headers $headers -Uri $uri -Method Get 
 return ( $Call | Select-Object Title, Body_Text, Created_at, Updated_at, State,assignee,Id) 
 
 
@@ -64,24 +66,58 @@ Function Edit-Issue {
         [string]$title,
         [string]$body,
         [string]$owner="hootiehoooo",
-        [parameter(Mandatory=$true)]
-        [integer]$Issueno,
-        [integer]$repo="PSCripts"
+        [parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        [Int64]$Issueno,
+        [string]$repo="PScripts",
+        [string[]]$labels
 
     )
     
-  
-    $GET=Invoke-WebRequest -Headers $headers -uri "$(BaseUri)/repos/$($owner)/$repo\$Issueno"
+  Begin {
     
+        $call= "$($BaseUri)/repos/$($owner)/$($repo)/issues/$($Issueno)" 
+
+
+}
+  process {  
     $issuebody=@{
         "title"= $title;
         "body"= $body;
-        "labels"= $label
+        "labels"= $label;
         "state_reason"=$statereason
     }
+    $JsonBody= $issuebody | ConvertTo-Json -Depth 2
+     try { 
+        Invoke-WebRequest -Headers $headers -uri $call -Method Patch -Body $JsonBody -erroraction Stop
+}
+catch {
+    write-warning "failed to update issue, $issueno"
+    write-error "$_"
+}
 
+
+    }
+end {
+
+}
+    
 
 } 
+
+Function Search-IssueNo
+{
+    param (
+        [string]$body,
+        [string]$owner= "hootiehoooo",
+        [string]$repo= "PScripts",
+        [int]$maxPages= 100,
+        [parameter(Mandatory)]
+        [string]$searchstr
+        )
+       
+       return  Get-Issues | Where { $_.title -like "*$searchstr*"} | Select Id, title, body
+    
+}
 
 
 

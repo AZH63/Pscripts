@@ -117,10 +117,11 @@ Function Get-GroupMembership {
 begin {
     
  $Groups= $GroupsToSearch | ForEach-Object {
-    if ($null -eq $_.)
- }
+    if ($null -eq $_.) {
  }
 }
+ }
+
 process {
        
 
@@ -129,6 +130,8 @@ end {
     
 }
 }
+
+
 
 Function Update-DDLSAzureAD {
 
