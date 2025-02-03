@@ -15,7 +15,7 @@ function Connect-AZTools {
     Authenticates to exchange online and entra.
 
     .DESCRIPTION
-    Connects to Microsoft Graph and Exchange Online.
+    Connects to Microsoft Graph, AzureAD and Exchange Online.
 
     .EXAMPLE
     Connect-AZTools
@@ -33,28 +33,32 @@ function Connect-AZTools {
     while ($choice -ne 4) 
 }
 
-function set-EmailForwarding {
-    param(
-        [Parameter(Mandatory)]
-        [string]$UserPrincipalName,
-        [Parameter(Mandatory)]
-        [string]$ForwardingAddress
-    )
-
-    Set-Mailbox -Identity $UserPrincipalName -ForwardingSmtpAddress $ForwardingAddress `
-        -DeliverToMailboxAndForward $true
 
 
-
-}
 function Convert-MailboxToShared {
     param(
         [Parameter(Mandatory)]
-        [string]$UserPrincipalName
+        [string]$UPN
     )
+   $userData= Get-AzureADUser -ObjectID $UPN | Select id, AssignedLicenses
+    
+    if ($null -ne $userData.AssignedLicenses.SkuId ) {
 
-    Set-Mailbox -Identity $UserPrincipalName -Type Shared
+    Set-Mailbox -Identity $UPN -Type Shared
     #remove license 
+    write-host "removing license"
+    $skuids= $userData.AssignedLicenses.SkuId
+    $Licenses= New-Object -TypeName Microsoft.Open.AzureAD.Model
+    $Licenses.RemoveLicenses= $skuids
+    Set-AzureADUserLicense -ObjectId $userData.ObjectId -AssignedLicenses $licenses
+    write-host "disabling user"
+    Disable-AzUser -UPN $UPN
+    }
+    else {
+
+        
+        write-warning "you'll use mailbox history doing this without a license! Reinstate and rerun"
+    }
 }
 Function Update-CustomAttribute1 {
     #have the other fx return email
@@ -92,7 +96,7 @@ Function Disable-AzUser {
     )
 
 $User= Get-AzureADUser -SearchString "$UPN"
-Write-Verbose -mesage "generating new password"
+Write-Verbose -message "generating new password"
 $randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
 $newpass= $randomPassword | ConvertTo-SecureString -AsPlainText -Force
 Write-Verbose -Message "resetting password"
