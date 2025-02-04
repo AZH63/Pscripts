@@ -35,30 +35,52 @@ function Connect-AZTools {
 
 
 
-function Convert-MailboxToShared {
+function Convert-MailboxSharedAzAD {
     param(
         [Parameter(Mandatory)]
-        [string]$UPN
+        [string[]]$UPN
     )
-   $userData= Get-AzureADUser -ObjectID $UPN | Select id, AssignedLicenses
+    begin {
+        $Userdata = $UPN | % { Get-AzureADUser -ObjectId $_ | Select UserPrincipalName,AssignedLicenses }
+        $unlicensed=  [System.Collections.ArrayList]::new()
+            
+    }
+
+  process  {
+
+ForEach ($user in $UserData) {
     
-    if ($null -ne $userData.AssignedLicenses.SkuId ) {
+    if ($null -ne $user.AssignedLicenses.SkuId ) {
 
-    Set-Mailbox -Identity $UPN -Type Shared
+    Set-Mailbox -Identity $user.UserPrincipalName -Type Shared
+    Get-Mailbox -Identity $user.UserPrincipalName | Select PrimarySmtpAddress, RecipientTypeDetails
+    Set-AzureADUser -ObjectID $user.UserPrincipalName -AccountEnabled $disabled
     #remove license 
-    write-host "removing license"
-    $skuids= $userData.AssignedLicenses.SkuId
-    $Licenses= New-Object -TypeName Microsoft.Open.AzureAD.Model
-    $Licenses.RemoveLicenses= $skuids
-    Set-AzureADUserLicense -ObjectId $userData.ObjectId -AssignedLicenses $licenses
-    write-host "disabling user"
-    Disable-AzUser -UPN $UPN
-    }
-    else {
+}
 
-        
-        write-warning "you'll use mailbox history doing this without a license! Reinstate and rerun"
+    else {
+              $unlicensed.Add($user)
+             write-warning "you'll lose mailbox history if user is newly unlicensed! well, supposedly"
+             
     }
+   
+}
+ Write-Output "$unlicensed"
+$choice= Read-host "would you like to continue?"
+if ($choice.ToUpper() -eq "y") {
+   $unlicensed | % { set-mailbox -type Shared}
+
+}
+else{
+    
+   
+
+}
+  }
+end {
+    $unlicensed | Expo
+    return $unlicensed
+}
 }
 Function Update-CustomAttribute1 {
     #have the other fx return email
