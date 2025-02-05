@@ -11,7 +11,7 @@ if ($parts.Count -eq 2) { #if its a hyphenated dept
   write-host "Department: $CleanDept  cost center: $Center user: $($user.Id) " 
   
    Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
-  Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
+  Update-MgBetaUser -UserId ($user.Id) -City $Center
 }
 else {
     $Match = $parts[0].Trim()
@@ -20,7 +20,7 @@ else {
     $Center =($CostCenters | Where-Object { $_."Cost  Center Name" -eq $Match -or $_."Cost Center" -eq $Match })."Cost Center"
     write-host "Department: $CleanDept  cost center: $Center user: $($user.Id) " 
     Update-MgBetaUser -UserId ($user.Id) -Department $CleanDept 
-    Update-MgBetaUser -UserId ($user.Id) -EmployeeType $Center
+    Update-MgBetaUser -UserId ($user.Id) -City $Center
     
  }   
 }
