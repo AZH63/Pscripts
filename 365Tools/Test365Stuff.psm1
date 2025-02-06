@@ -64,25 +64,46 @@ Function Remove-DistMemb {
     param (
        
     [parameter(Mandatory)]
-    [string]$identity,
-       [string[]]$member 
-       )
+    [string[]]$identity
+    )
     
-    begin {$group= $identity | % {  Get-DistributionGroup -Identity $identity} }
+    begin {$Groups= $identity | % {  try {(Get-DistributionGroup -identity $_).PrimarySmtpAddress }
+    catch {
+        Get-UnifiedGroup -identity $_
+    }
+    
+    
+    }
+write-verbose "groups passed $Groups ( if any is missing its probably something else)"
+}
     process {
     
-        if ( $group)
-    $members= if ($group) { 
-    $group | % { Get-DistributionGroupMember -identity $_ | Select -ExpandProperty PrimarySmtpAddress }
+    $Groups | % {
+        if ($null -ne $_) {
+         $group= $_
+        write-host "group is $_"
+        write-verbose "grabbing members"
+      $members= (Get-DistributionGroupMember -identity $_ ).PrimarySMTPaddress
+      write-verbose "members are $members from $group"
+      forEach ( $mem in $members) {
+        write-verbose "removing member $mem from $group"
+      
+       #  write-host "$_" 
+        Remove-DistributionGroupMember -identity $group -member $mem -BypassSecurityGroupManagerCheck -Confirm:$false
+      }
+      }
+      else {
+        write-verbose "not a group or null "
+      }
+  
+    } 
+        }
+        end { 
+            $Groups | % {
+                "Members are $((Get-DistributionGroupMember -identity $_).PrimarySmtpAddress)"
+            }
+        }
     }
-    else {
-        write-warning "group not found" 
-    }
-    
-    
-    
-    $members | % { remove-distributionGroupMember -identity $identity -member $_ -BypassSecurityGroupManagerCheck -Confirm:$false}
-    
-    }
-    end { }
-    }
+
+   
+      
