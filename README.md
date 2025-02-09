@@ -19,7 +19,7 @@ Extract the folder containing .psm1 files to any valid PowerShell module path. U
 * Microsoft.Graph ( basic support for 5.1 but you'll have a better time on Powershell Core)
 
 ## Azure Automation info
-* Runbooks use 5.1 ( Graph scripts use simple GET/POST requests)
+* Runbooks use 5.1 
 ### Modules used:
 * AzureAD (custom)
 * ExchangeOnlineManagement(gallery)
