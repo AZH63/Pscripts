@@ -1,6 +1,6 @@
 # PScripts
 
-Contains Modules with functions I use in the day to day, scripts I use semi frequently, code for Azure Automation projects and
+Contains Modules with functions used typically in the day to day, scripts used semi frequently, code for Azure Automation projects and
 works in progress.
 
 
