@@ -35,53 +35,7 @@ function Connect-AZTools {
 
 
 
-function Convert-MailboxSharedAzAD {
-    param(
-        [Parameter(Mandatory)]
-        [string[]]$UPN
-    )
-    begin {
-        $Userdata = $UPN | % { Get-AzureADUser -ObjectId $_ | Select UserPrincipalName,AssignedLicenses }
-        $unlicensed=  [System.Collections.ArrayList]::new()
-            
-    }
 
-  process  {
-
-ForEach ($user in $UserData) {
-    
-    if ($null -ne $user.AssignedLicenses.SkuId ) {
-
-    Set-Mailbox -Identity $user.UserPrincipalName -Type Shared
-    Get-Mailbox -Identity $user.UserPrincipalName | Select PrimarySmtpAddress, RecipientTypeDetails
-    Set-AzureADUser -ObjectID $user.UserPrincipalName -AccountEnabled $disabled
-    #remove license 
-}
-
-    else {
-              $unlicensed.Add($user)
-             write-warning "you'll lose mailbox history if user is newly unlicensed! well, supposedly"
-             
-    }
-   
-}
- Write-Output "$unlicensed"
-$choice= Read-host "would you like to continue?"
-if ($choice.ToUpper() -eq "y") {
-   $unlicensed | % { set-mailbox -type Shared}
-
-}
-else{
-    
-   
-
-}
-  }
-end {
-    $unlicensed | Expo
-    return $unlicensed
-}
-}
 Function Update-CustomAttribute1 {
     #have the other fx return email
 param (
@@ -112,11 +66,42 @@ $AzureInfo | ForEach-Object {
     }
     }
 Function Disable-AzUser {
+    
     param(
         [Parameter(Mandatory)]
-        [string]$UPN
+        [string[]]$UPN,
+        [switch]$Graph
     )
+Add-Type -AssemblyName 'System.Web'
 
+if ($Graph) {
+
+
+   $Users= forEach ($Up in $UPN) {
+        if ($Up -like "*@*") {
+       Get-MgBetaUser -filter " mail eq '$Up'" -ConsistencyLevel eventual 
+        }
+        else {
+             Get-MgBetaUser -Search "DisplayName:$Up" -ConsistencyLevel eventual
+        }
+      
+
+    }
+    Write-Host "users grabbed: $($Users.UserPrincipalName)"
+    Write-Verbose -message "generating new password"
+ForEach ($user in $Users) {
+$newpass= Generate-Password # same module
+Write-Verbose -Message "resetting password"
+$params=@{ newPassword= $newpass}
+$authenticationMethodId= "28c10230-6103-485e-b985-444c60001490" #always
+Reset-MgUserAuthenticationMethodPassword -UserId $($user.Id) -AuthenticationMethodId $authenticationMethodId -BodyParameter $params
+
+}
+
+}
+
+
+    else {
 $User= Get-AzureADUser -SearchString "$UPN"
 Write-Verbose -message "generating new password"
 $randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
@@ -127,6 +112,7 @@ Write-Verbose -Message "revoking sessions"
 Revoke-AzureADUserAllRefreshToken -objectId $($User.ObjectId)
 Write-Verbose -Message "disabling"
 Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
+}
 }
 
 
@@ -377,6 +363,22 @@ Function Remove-MailEnabledAzureAD {
 
 #
 
+Function Generate-Password {
+param (
+    
+[ValidateRange(12, 256)]
+[int]$length = 14
+)
+<#
+.Description 
+.Net Core doesn't have [system.web] :(
+#>
+$symbols= '!@#$%^&*'.ToCharArray()
+$charlist= 'a'..'z' + 'A'..'Z' + '0'..'9' + $symbols
+$password= -join (0..$length | % { $charlist | Get-Random })
+$newpass= $password | ConvertTo-SecureString -AsPlainText
+return $newpass
+}
 
 
 

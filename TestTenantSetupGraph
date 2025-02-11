@@ -1,8 +1,4 @@
-Function Add-Groups {
-
-    1..3| ForEach-Object { New-DistributionGroup -name "TestDistro$_"  -Type "Security"
-          New-DistributionGroup -name "TestMesg$_" 
-          New-UnifiedGroup -emailaddress "Test365-$_"
+Function Create-Groups {
 
    for ( $i=1;$i -le 3;$i++) {
    
@@ -25,10 +21,7 @@ Function Add-Groups {
     }
     New-MgGroup -BodyParameter $params
     New-MgGroup -BodyParameter $paramsSec 
-    Connect-AzureAD -Identity
-Connect-ExchangeOnline -ManagedIdentity -Organization
-Get-DynamicDistributionGroupMember -identity "All_Employees" | Select-Object  -ExpandProperty Alias
-
+   
 New-DynamicDistributionGroup -name “All_Employees” -RecipientFilter “((((RecipientType -eq 'UserMailbox') -and (-not(CustomAttribute1 -eq 'Disabled')))) -and (-not(Name -like 'SystemMailbox{')) -and (-not(Name -like 'CAS_{')) -and (-not(RecipientTypeDetailsValue -eq 'MailboxPlan')) -and (-not(RecipientTypeDetailsValue -eq 'DiscoveryMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'PublicFolderMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'ArbitrationMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuxAuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'SupervisoryReviewPolicyMailbox')))”
     write-host "$i"
 }
@@ -36,15 +29,8 @@ New-DynamicDistributionGroup -name “All_Employees” -RecipientFilter “((((R
 
     }
 
-          
-
-
-
-}
-
-
 Try {
-Connect-MgGraph 
+Connect-MgGraph -Scopes "Directory.ReadWrite.All"
 Get-MgContext
 Connect-ExchangeOnline
 }
@@ -72,15 +58,10 @@ PasswordProfile= @{
 }
 }
 New-MgUser -BodyParameter $params
-
-}
-
-$EmployeesAdded= $startingpt..$UserCount
-$EmployeesAdded | ForEach-Object {
-
 Update-MgBetaUser -userId "user$_@$tenant"   -EmployeeId $_
-
 }
+
+
 #find the midpt
 $midpoint= [math]::Ceiling($EmployeesAdded.Count /2)
 # split array in half using midpoint
@@ -92,7 +73,21 @@ Update-MgBetaUser -UserId "user$_@$tenant" -AccountEnabled $false
 
 }
 
-Add-Groups
+Create-Groups
+#license
+#create test desk pick a user to assign
+Get-Random -InputObject ((Get-MgUser).Id)
+
+$params=@{
+    description = "Group for Helpdesk privs"
+        DisplayName = "HelpDesk"
+        mailEnabled = $false
+        mailNickName= "HelpDesk"
+        securityEnabled= $true 
+        isAssignableToRole = $true
+}
+New-MgGroup -BodyParameter $params
+
 
 
 
