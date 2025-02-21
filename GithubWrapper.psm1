@@ -19,7 +19,7 @@ Function Connect-Github {
 Function Get-Issues {
     param (
     [string]$body,
-    [string]$owner= "hootiehoooo",
+    [string]$owner= "AZH63",
     [string]$repo= "PScripts",
     [int]$maxPages= 100
     )
@@ -43,7 +43,7 @@ Function Create-Issue {
         [string]$title,
         [parameter(Mandatory=$true)]
         [string]$body,
-        [string]$owner="hootiehoooo",
+        [string]$owner="AZH63",
         [string]$repo="PScripts",
         [ValidateSet("ToDo", "Priority", "enhancement","help wanted", "question", IgnoreCase = $true)]
         [string[]]$label
@@ -65,7 +65,7 @@ Function Edit-Issue {
     param (
         [string]$title,
         [string]$body,
-        [string]$owner="hootiehoooo",
+        [string]$owner="AZH63",
         [parameter(Mandatory=$true,ValueFromPipeline=$true)]
         [Int64]$Issueno,
         [string]$repo="PScripts",
@@ -108,7 +108,7 @@ Function Search-IssueNo
 {
     param (
         [string]$body,
-        [string]$owner= "hootiehoooo",
+        [string]$owner= "AZH63",
         [string]$repo= "PScripts",
         [int]$maxPages= 100,
         [parameter(Mandatory)]
@@ -125,16 +125,18 @@ Function Search-IssueNo
 
 
 
+$uri= "$($BaseUri)/repos/$($owner)/$($repo)/issues"
+$Call = Invoke-RestMethod -Headers $headers -Uri $uri -Method Get 
 
 
 
+if ()
+for ( $i=0;$i<)
+
+DisplayName:$Up
 
 
-
-
-
-
-
+Next= /(?<=<)([\S]*)(?=>; rel="Next")/i
 
 
 
