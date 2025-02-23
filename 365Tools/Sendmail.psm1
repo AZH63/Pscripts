@@ -10,7 +10,9 @@ Function Send-Mail {
      $type="HTML",
      [string]$subject,
     [bool] $save=$true,
-    [switch]$attachments
+    [switch]$attachments,
+    [string]$folder
+    
    
    )
     Try {
@@ -71,12 +73,16 @@ Function Send-Mail {
    $files= Get-ChildItem $folder -file -recurse # file switch = -attributes !Directory
    
    $files | % {
-   $encodedfile= [convert]::ToBase64String((Get-Content $_.FullName -Encoding byte))
+    $file=($_.FullName).ToString()
+    # $byteArray=[system.IO.file]::ReadAllBytes((Get-Content $_.FullName))
+    $byteArray=[system.IO.file]::ReadAllBytes($file)
+   $base64=[System.Convert]::ToBase64String($byteArray)
+   #$encodedfile= [convert]::ToBase64String((Get-Content $_.FullName))
    @{
    
        "@odata.type"= "#microsoft.graph.fileAttachment"
                    name = ($_.FullName -split '\\')[-1]
-                   contentBytes = $encodedfile
+                   contentBytes = $base64
    
    }
    
@@ -111,3 +117,5 @@ $upns= $users | Where { $_ -notlike "*EXT*" -and $_ -notlike "*_*" }
         }
    }
   }
+
+  
