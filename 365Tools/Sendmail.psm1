@@ -73,11 +73,10 @@ Function Send-Mail {
    $files= Get-ChildItem $folder -file -recurse # file switch = -attributes !Directory
    
    $files | % {
-    $file=($_.FullName).ToString()
-    # $byteArray=[system.IO.file]::ReadAllBytes((Get-Content $_.FullName))
+    $file=($_.FullName).ToString() #was getting null charas errors otherwise
     $byteArray=[system.IO.file]::ReadAllBytes($file)
    $base64=[System.Convert]::ToBase64String($byteArray)
-   #$encodedfile= [convert]::ToBase64String((Get-Content $_.FullName))
+   
    @{
    
        "@odata.type"= "#microsoft.graph.fileAttachment"
