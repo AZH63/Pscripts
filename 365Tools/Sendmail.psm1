@@ -11,7 +11,8 @@ Function Send-Mail {
      [string]$subject,
     [bool] $save=$true,
     [switch]$attachments,
-    [string]$folder
+    [string]$path
+    
     
    
    )
@@ -50,9 +51,10 @@ Function Send-Mail {
     }
     
     if ($attachments) {
-        $files= Convert-GraphAttachment -folder $folder
+      write-verbose "converting to a graph attachment"
+        $files= Convert-GraphAttachment -path $path
         if ($files.Count -gt 0) {
-   
+   write-verbose "mailbody param looks like this: $mailbody"
            $mailbody['message']['attachments']= $files #adds attachments to message subtable
            
        }
@@ -68,9 +70,9 @@ Function Send-Mail {
    
    param (
        [parameter(Mandatory)]
-       [string]$folder
+       [string]$path
    )
-   $files= Get-ChildItem $folder -file -recurse # file switch = -attributes !Directory
+   $files= Get-ChildItem $path -file -recurse # file switch = -attributes !Directory
    
    $files | % {
     $file=($_.FullName).ToString() #was getting null charas errors otherwise
@@ -117,4 +119,20 @@ $upns= $users | Where { $_ -notlike "*EXT*" -and $_ -notlike "*_*" }
    }
   }
 
+  Function Generate-Inbox {
+    param (
+      [string[]]$recipients,
+      [string]$sendAdd,
+      [int]$counter
+    )
+     
+    1..$counter | % { Send-Mail -sendAdd $sendAdd -recipients $recipients }
   
+    }
+  
+  
+    # .3 mb every 10,000 w.o attachments lol
+    # this is a nice trick to actually fill the senders mb with undeliverables from message limits, so task still accomplished?
+    # exo recipient limit - 2k in 24 hrs
+    # RX limit is 3600 from 1 sender is 1800?
+    # # handy info: https://learn.microsoft.com/en-us/office365/servicedescriptions/exchange-online-service-description/exchange-online-limits

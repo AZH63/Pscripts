@@ -5,7 +5,7 @@ Function Send-Mail {
      [parameter(mandatory)] 
      [string]$sendAdd,
      [parameter(mandatory)]
-     [string]$recipients,
+     [string[]]$recipients,
      [object]$text,
      $type="HTML",
      [string]$subject,
@@ -109,5 +109,6 @@ $upns= $users | Where { $_ -notlike "*EXT*" -and $_ -notlike "*_*" }
 
     Send-Mail -sendAdd "yoohooo@1x4bs0.onmicrosoft.com" -recipients $name -subject "testmail $_"
         }
-   }
-  }
+
+      }
+    }
