@@ -20,6 +20,8 @@ $List | Export-Csv "$env:UserProfile\Downloads\DistroMesg.csv"
 
 $LowCountMesgOrDistro= $List | Where { $_.members -le 5}
 $LowCountMesgOrDistro | Export-csv "$env:UserProfile\Downloads\LowCountMesg.csv"
+start "$env:UserProfile\Downloads\DistroMesg.csv"
+start "$env:UserProfile\Downloads\LowCountMesg.csv"
 
 
 $List | Export-Csv "$env:UserProfile\Downloads\list.csv"
