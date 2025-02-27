@@ -11,17 +11,21 @@ ForEach ($group in $Groups) {
     ManagedBy = $group.ManagedBy
     WhenChanged= $group.WhenChanged
     WhenCreated= $group.WhenCreated
-
+    GroupType= $(if ($group.GroupType -like "*SecurityEnabled*") { write-output "Mesg" }
+    else { write-output "Distro"} )
  } ) | Out-Null
 
-
-
 }
+$List | Export-Csv "$env:UserProfile\Downloads\DistroMesg.csv"
+
+$LowCountMesgOrDistro= $List | Where { $_.members -le 5}
+$LowCountMesgOrDistro | Export-csv "$env:UserProfile\Downloads\LowCountMesg.csv"
+
 
 $List | Export-Csv "$env:UserProfile\Downloads\list.csv"
 
 
-$Teams= Get-AzureADGroup -All $true | Where {$_.MailEnabled -eq $true }
+<# $Teams= Get-AzureADGroup -All $true | Where {$_.MailEnabled -eq $true }
 
 $teamsexpo= $Teams | % { 
 
@@ -40,3 +44,5 @@ $teamsexpo= $Teams | % {
 }
 
 $teamsexpo | Export-Csv -path $env:UserProfile\Downloads\365_2_6_25.csv
+Not sure why I felt the need for this
+#> 

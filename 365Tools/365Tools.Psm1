@@ -65,7 +65,7 @@ $AzureInfo | ForEach-Object {
     
     }
     }
-Function Disable-AzUser {
+Function Disable-User {
     
     param(
         [Parameter(Mandatory)]
@@ -119,7 +119,7 @@ Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
 
 
 
-Function Get-GroupMembership {
+<# Function Get-GroupMembership {
 # any groups that are mail-enabled use the email address, no email Sec groups can use 
     [CmdletBinding()] 
     param ( 
@@ -141,7 +141,9 @@ process {
 end {
     
 }
-}
+} 
+
+#>
 
 
 
@@ -230,7 +232,12 @@ Function Convert-Shared{
 
 }
 
-
+Function Disable-SharedMb {
+ 
+    $Mbs= get-mailbox -filter " RecipientTypeDetails -eq 'SharedMailbox' " | Select  PrimarySmtpAddress, AccountEnabled
+    $Bad= $Mbs | Where { $_.AccountEnabled -eq $true}
+    $Bad | % { Set-AzureADUser -ObjectID $_.PrimarySmtpAddress  -AccountEnabled $false }
+    }
 
 Function Search-MailboxesExport{
 <#
@@ -273,7 +280,7 @@ write-host " no export, here are the users again: $($FoundBoxes | Format-Table)"
     
     $Searchstr= "onmicrosoft.com"
     Search-MailboxesExport -Searchstr $Searchstr
-
+    start-Process  $env:USERPROFILE\Downloads\AddstoCorr.csv
 
 }
    }
@@ -406,6 +413,7 @@ Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id } (winner)
 
 measure-command {$GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes  } } (slight winner)
 measure-command { $GroupIds | % { Get-MgGroup -GroupId $_   } }
+
 
 
 #>
