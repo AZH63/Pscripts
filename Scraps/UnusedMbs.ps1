@@ -21,13 +21,17 @@ $mbStats= @{}
  process {
 foreach ($user in $users) {
  $stats= Get-MailboxStatistics -identity $user | Select LastInteractionTime, LastUserActionTime, LastLogonTime
-
- $mailboxStats=
-
+ 
+            $mailboxStats[$user] = @{
+                DisplayName         = $stats.DisplayName
+                LastLogonTime       = $stats.LastLogonTime
+                LastInteractionTime = $stats.LastInteractionTime
+            }
+        }
 
 }
 
-}
+
 
 
 }
