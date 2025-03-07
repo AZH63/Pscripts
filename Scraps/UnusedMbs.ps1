@@ -3,6 +3,53 @@
 #LastInteractionTime # near real time, updated independently but possible influenced by background assistants
 #LastLogonTime #ran MFA didn't seem to change, maybe it can be trusted
 
+Function Get-UnUsedMbs {
+  param(
+   [switch]$logonweek,
+   [switch]$nouserinteraction, #either find an alt or add description that its technically deprecated..making this excersise kinda useless
+   [switch]$Week,
+   [switch]$Month,
+   [Parameter(ValueFromPipeline=$true)]
+   [string[]]$users
+
+)
+ begin {
+$mbStats= @{}
+
+
+ }
+ process {
+foreach ($user in $users) {
+ $stats= Get-MailboxStatistics -identity $user | Select LastInteractionTime, LastUserActionTime, LastLogonTime
+
+ $mailboxStats=
+
+
+}
+
+}
+
+
+}
+end 
+{
+
+switch ($PSBoundParameters.keys) {
+   'logonweek' {
+
+   }
+   'logonmonth' {
+    
+     
+   }
+   'nologon' { }
+   'nouserinteraction' {}
+   default {
+      write-warning "unhandled parameter --> $($_)"
+   }
+   }
+   
+}
 
 
 $licensed= Get-AzureADUser | Where-Object { $_.AccountEnabled -eq $true -and $_.AssignedLicenses -ne $null}
@@ -20,6 +67,7 @@ $emails= $licensed | ForEach-Object {
      }
      
 }
+
 $emails | export-csv -path $env:UserProfile\Downloads\MbLogonstats.csv
 [datetime]$date= Get-Date 
 
@@ -35,3 +83,7 @@ $noLogonsInaMonth | export-csv -path $env:USERPROFILE\Downloads\noLogonsInaMonth
 $neverloggedIn | export-csv -path $env:USERPROFILE\Downloads\neverloggedIn.csv
 $nointeractions | export-csv -path $env:USERPROFILE\Downloads\nointeractions.csv
 
+
+#grab relevant users or accept it thru pipeline, accepting has to be done in process block
+# fill a table with relevant stats if using hashtable need to make sure no dupes ( its not allowed anyway right??)
+#keys will instead be for timeframes 
