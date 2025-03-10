@@ -3,15 +3,18 @@
 #LastInteractionTime # near real time, updated independently but possible influenced by background assistants
 #LastLogonTime #ran MFA didn't seem to change, maybe it can be trusted
 
-Function get-UnusedMbs {
+Function get-Unusedmbs {
   param(
+   [CmdletBinding()]
+  [Parameter(Position=0,ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+   [string[]]$users,
    [switch]$logonweek,
    [switch]$nouserinteraction, #either find an alt or add description that its technically deprecated..making this excersise kinda useless
    [switch]$Week,
    [switch]$month,
-   [Parameter(ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-   [string[]]$users
-
+   [switch]$nologon,
+   [switch]$all
+   
 
 )
  begin {
@@ -20,11 +23,13 @@ $emails=$users | % {
  if ($_ -notlike "*@*") {
    write-host "searching"
     try {
-      $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
+     # $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
+     $res= Get-AzureADuser -searchstring "$_"
       write-output "$($res.UserPrincipalName)"
  }
  catch {
-   $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
+   # $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
+   $res= Get-AzureADuser -searchstring "$_"
     write-output "$($res.UserPrincipalName)"
   
  
@@ -60,15 +65,50 @@ switch ($PSBoundParameters.keys) {
    
    'logonweek' {
       
-      $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) } 
+      $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) }
+      if (!$nologonweek) {
+           write-host "value is null"
+           break;
+      }
+      else {
+      $nologonweek | export-csv -path $env:UserProfile\Downloads\nologonweek.csv
+      }
+       
    }
    'logonmonth' {
     $nologonmonth = $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-30)  }
-     
+    if (!$nologonmonth) {
+       write-host "value is null"
+       break;
+    }
+    else {
+    $nologonmonth | export-csv -path $env:UserProfile\Downloads\nologonweek.csv
+    }
    }
-   'nologon' { $nologon= $mbstats | Where-Object { !$_.LastLogonTime } }
+   'nologon' { $nologon= $mbstats | Where-Object { !$_.LastLogonTime } 
+    if (!$nologon) {
+           write-host "value is null"
+           break;
+    }
+    else {
+   $nologon | export-csv -path $env:UserProfile\Downloads\nologon.csv
+    }
+
+}
+
    'nouserinteraction' {
       $nouserinteraction= $mbstats | Where-Object {!$_.LastUserActionTime}
+      if (!$nouserinteraction) {
+          write-host "value is null"
+          break;
+      }
+      else {
+      $nouserinteraction | export-csv -path $env:UserProfile\Downloads\nouserinteraction.csv
+      }
+   }
+   'all' {    
+     $mbstats | export-csv -path $env:UserProfile\Downloads\mbstats.csv  
+  
    }
 
    default {
@@ -78,6 +118,33 @@ switch ($PSBoundParameters.keys) {
    
 }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 $licensed= Get-AzureADUser | Where-Object { $_.AccountEnabled -eq $true -and $_.AssignedLicenses -ne $null}
