@@ -3,44 +3,64 @@
 #LastInteractionTime # near real time, updated independently but possible influenced by background assistants
 #LastLogonTime #ran MFA didn't seem to change, maybe it can be trusted
 
-Function Get-UnUsedMbs {
+Function get-UnusedMbs {
   param(
    [switch]$logonweek,
    [switch]$nouserinteraction, #either find an alt or add description that its technically deprecated..making this excersise kinda useless
    [switch]$Week,
-   [switch]$Month,
-   [Parameter(ValueFromPipeline=$true)]
+   [switch]$month,
+   [Parameter(ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
    [string[]]$users
+
 
 )
  begin {
-$mbStats= @{}
-
-
+   
+$emails=$users | % {
+ if ($_ -notlike "*@*") {
+   write-host "searching"
+    try {
+      $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
+      write-output "$($res.UserPrincipalName)"
  }
- process {
-foreach ($user in $users) {
- $stats= Get-MailboxStatistics -identity $user | Select LastInteractionTime, LastUserActionTime, LastLogonTime
+ catch {
+   $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
+    write-output "$($res.UserPrincipalName)"
+  
  
-            $mailboxStats[$user] = @{
-                DisplayName         = $stats.DisplayName
+    }
+
+}
+else {
+   write-host "$_ all good here" 
+   write-output "$_"
+    }
+
+ } 
+}
+ process {
+$mbstats= foreach ($email in $emails) {
+ $stats= Get-MailboxStatistics -identity $email | Select LastInteractionTime, LastUserActionTime, LastLogonTime
+ 
+            [PSCustomObject]@{
+                Name       = $email
                 LastLogonTime       = $stats.LastLogonTime
                 LastInteractionTime = $stats.LastInteractionTime
+                LastUserActionTime= $stats.LastUserActionTime
             }
         }
+        [datetime]$date= Get-Date
 
 }
 
-
-
-
-}
 end 
 {
 
 switch ($PSBoundParameters.keys) {
+   
    'logonweek' {
-
+      
+      $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) } 
    }
    'logonmonth' {
     
@@ -53,6 +73,7 @@ switch ($PSBoundParameters.keys) {
    }
    }
    
+}
 }
 
 
