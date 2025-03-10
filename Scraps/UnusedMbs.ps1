@@ -63,11 +63,14 @@ switch ($PSBoundParameters.keys) {
       $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) } 
    }
    'logonmonth' {
-    
+    $nologonmonth = $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-30)  }
      
    }
-   'nologon' { }
-   'nouserinteraction' {}
+   'nologon' { $nologon= $mbstats | Where-Object { !$_.LastLogonTime } }
+   'nouserinteraction' {
+      $nouserinteraction= $mbstats | Where-Object {!$_.LastUserActionTime}
+   }
+
    default {
       write-warning "unhandled parameter --> $($_)"
    }
