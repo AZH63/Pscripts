@@ -11,8 +11,7 @@ Function get-Unusedmbs {
    [switch]$week,
    [switch]$nouserinteraction, #either find an alt or add description that its technically deprecated..making this excersise kinda useless
    [switch]$month,
-   [switch]$nologon,
-   [switch]$all
+   [switch]$nologon
    
 
 )
@@ -20,18 +19,21 @@ Function get-Unusedmbs {
  
 }
  process {
+   write-host "checking user- $_ entered"
    $emails=$users | % {
       if ($_ -notlike "*@*") {
-        write-host "searching"
+        write-verbose "not a UPN, checking "
          try {
+            write-verbose "searching by displayname"
            $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
          # $res= Get-AzureADuser -searchstring "$_"
           write-output "$($res.UserPrincipalName)"
           
       }
       catch {
+         write-verbose "good ole where-object"
         $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
-        # $res= Get-AzureADuser -searchstring "$_"
+        
         write-output "$($res.UserPrincipalName)"
        
       
@@ -39,14 +41,16 @@ Function get-Unusedmbs {
      
      }
      else {
-        write-host "$_ all good here" 
+        write-verbose "$_ all good here" 
         write-output "$_"
          }
      
       }
       
 $mbstats= foreach ($email in $emails) {
- $stats= Get-MailboxStatistics -identity $email | Select LastInteractionTime, LastUserActionTime, LastLogonTime
+   try {
+      Write-Host "grabbing mailbox statistics"
+ $stats= Get-MailboxStatistics -identity $email | Select LastInteractionTime, LastUserActionTime, LastLogonTime -ErrorAction stop -ErrorVariable err
  
             [PSCustomObject]@{
                 Name       = $email
@@ -54,9 +58,14 @@ $mbstats= foreach ($email in $emails) {
                 LastInteractionTime = $stats.LastInteractionTime
                 LastUserActionTime= $stats.LastUserActionTime
             }
-        }
+        
         [datetime]$date= Get-Date
+      }
+      catch {
+          $err
 
+      }
+   }
 }
 
 end 
