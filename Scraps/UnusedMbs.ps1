@@ -2,15 +2,14 @@
 #LastUserActionTime #last action performed by user -- deprecated
 #LastInteractionTime # near real time, updated independently but possible influenced by background assistants
 #LastLogonTime #ran MFA didn't seem to change, maybe it can be trusted
-
+#
 Function get-Unusedmbs {
   param(
    [CmdletBinding()]
-  [Parameter(Position=0,ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
-   [string[]]$users,
-   [switch]$logonweek,
+  [Parameter(ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+   [object[]]$users,
+   [switch]$week,
    [switch]$nouserinteraction, #either find an alt or add description that its technically deprecated..making this excersise kinda useless
-   [switch]$Week,
    [switch]$month,
    [switch]$nologon,
    [switch]$all
@@ -18,32 +17,34 @@ Function get-Unusedmbs {
 
 )
  begin {
-   
-$emails=$users | % {
- if ($_ -notlike "*@*") {
-   write-host "searching"
-    try {
-     # $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
-     $res= Get-AzureADuser -searchstring "$_"
-      write-output "$($res.UserPrincipalName)"
- }
- catch {
-   # $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
-   $res= Get-AzureADuser -searchstring "$_"
-    write-output "$($res.UserPrincipalName)"
-  
  
-    }
-
-}
-else {
-   write-host "$_ all good here" 
-   write-output "$_"
-    }
-
- } 
 }
  process {
+   $emails=$users | % {
+      if ($_ -notlike "*@*") {
+        write-host "searching"
+         try {
+           $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
+         # $res= Get-AzureADuser -searchstring "$_"
+          write-output "$($res.UserPrincipalName)"
+          
+      }
+      catch {
+        $res= Get-MgUSer | Where { $_.Name -like "*$_*" }
+        # $res= Get-AzureADuser -searchstring "$_"
+        write-output "$($res.UserPrincipalName)"
+       
+      
+         }
+     
+     }
+     else {
+        write-host "$_ all good here" 
+        write-output "$_"
+         }
+     
+      }
+      
 $mbstats= foreach ($email in $emails) {
  $stats= Get-MailboxStatistics -identity $email | Select LastInteractionTime, LastUserActionTime, LastLogonTime
  
@@ -63,23 +64,23 @@ end
 
 switch ($PSBoundParameters.keys) {
    
-   'logonweek' {
+   'week' {
       
       $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) }
       if (!$nologonweek) {
            write-host "value is null"
-           break;
+           
       }
       else {
       $nologonweek | export-csv -path $env:UserProfile\Downloads\nologonweek.csv
       }
        
    }
-   'logonmonth' {
+   'month' {
     $nologonmonth = $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-30)  }
     if (!$nologonmonth) {
        write-host "value is null"
-       break;
+      
     }
     else {
     $nologonmonth | export-csv -path $env:UserProfile\Downloads\nologonweek.csv
@@ -88,8 +89,9 @@ switch ($PSBoundParameters.keys) {
    'nologon' { $nologon= $mbstats | Where-Object { !$_.LastLogonTime } 
     if (!$nologon) {
            write-host "value is null"
-           break;
+           
     }
+    
     else {
    $nologon | export-csv -path $env:UserProfile\Downloads\nologon.csv
     }
@@ -100,20 +102,18 @@ switch ($PSBoundParameters.keys) {
       $nouserinteraction= $mbstats | Where-Object {!$_.LastUserActionTime}
       if (!$nouserinteraction) {
           write-host "value is null"
-          break;
+         
       }
       else {
       $nouserinteraction | export-csv -path $env:UserProfile\Downloads\nouserinteraction.csv
       }
    }
-   'all' {    
+   default {    
      $mbstats | export-csv -path $env:UserProfile\Downloads\mbstats.csv  
   
    }
 
-   default {
-      write-warning "unhandled parameter --> $($_)"
-   }
+  
    }
    
 }
