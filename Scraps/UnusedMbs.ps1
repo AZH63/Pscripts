@@ -128,6 +128,30 @@ switch ($PSBoundParameters.keys) {
 }
 }
 
+$activeusers= get-mgbetauser | Where { $_.AccountEnabled -eq $true} | select -ExpandProperty UserPrincipalName
+# $activeusers |% { Get-MgUserLicenseDetail -userid $_} 
+$mbstats= @{}
+forEach ($user in $activeusers) {
+try {
+    $currentUser++
+    Write-Progress -Activity "Processing Users" -Status "User $currentUser of $totalUsers" -PercentComplete (($currentUser / $totalUsers) * 100)
+$stats= Get-MailboxStatistics  -identity $user -erroraction stop 
+$mbstats[$user]= @{
+  Name = $user
+  LastLogon= $stats.LastLogonTime
+  LastUserAction= $stats.LastUserActionTime 
+ 
+}
+
+}
+catch {
+    $message= $_
+write-warning " failed to get data for user $message"
+
+}
+}
+
+$mbstats["AlexW@1x4bs0.onmicrosoft.com"]["LastLogon"]
 
 
 

@@ -144,11 +144,12 @@ Function get-Unusedmbs {
         
         $nologonweek= $mbstats | Where-Object { $_.LastLogonTime -and $_.LastLogonTime -lt $date.AddDays(-7) }
         if (!$nologonweek) {
-             write-host "value is null"
+             Write-Warning "value is null"
              
         }
         else {
         $nologonweek | export-csv -path $env:UserProfile\Downloads\nologonweek.csv
+        start $env:UserProfile\Downloads\nologonweek.csv
         }
          
      }
