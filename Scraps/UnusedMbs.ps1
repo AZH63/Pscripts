@@ -3,6 +3,7 @@
 #LastInteractionTime # near real time, updated independently but possible influenced by background assistants
 #LastLogonTime #ran MFA didn't seem to change, maybe it can be trusted
 #
+Get-MgBetaUser | Where { $_.EmployeeType -ne "ServiceAccount" -and $_.EmployeeId -ne $null}
 Function get-Unusedmbs {
   param(
    [CmdletBinding()]
@@ -173,8 +174,10 @@ $mbstats["AlexW@1x4bs0.onmicrosoft.com"]["LastLogon"]
 
 
 
+Get-Module -Name MicrosoftTeams -ListAvailable | Select-Object Name, Version
 
 
+Install-Module -Name PowerShellGet -Force -AllowClobber
 
 
 
@@ -215,3 +218,40 @@ $nointeractions | export-csv -path $env:USERPROFILE\Downloads\nointeractions.csv
 #grab relevant users or accept it thru pipeline, accepting has to be done in process block
 # fill a table with relevant stats if using hashtable need to make sure no dupes ( its not allowed anyway right??)
 #keys will instead be for timeframes 
+
+
+
+
+
+Connect-MgGraph -Scopes "AuditLog.Read.All","User.Read.All", "UserActivity.ReadWrite.CreatedByApp","Reports.Read.All"
+$properties= @("UserPrincipalName","DisplayName","SignInActivity")
+$AllUsers= Get-MgBetaUser -All -Property $properties
+
+
+Invoke-MgBetaRecentUserActivity -UserId "yoohooo@1x4bs0.onmicrosoft.com" # UserActivity.ReadWrite.CreatedByApp
+
+
+
+
+# Define the URL for the user activity report
+$url = "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D7')" # "Reports.Read.All"
+
+# Define the output file path
+$outputFilePath = "$env:UserProfile\Downloads\report.csv"
+
+# Make the request to the Graph API and save the response to a file
+Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $outputFilePath
+
+Function Get-TeamsLastDate {
+
+param (
+    $OutputPath="$env:UserProfile\Downloads\report.csv",
+    $days="7"
+    
+    
+)
+Connect-MgGraph -Scopes "Reports.Read.All","User.ReadWrite.All"
+$url = "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D30')"
+$report= Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $OutputPath
+$stats= import-csv -path $OutputPath
+}
