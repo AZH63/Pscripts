@@ -154,7 +154,7 @@ write-warning " failed to get data for user $message"
 
 $mbstats["AlexW@1x4bs0.onmicrosoft.com"]["LastLogon"]
 
-
+Get-MgReportRootTeamsUserActivityUserDetail
 
 
 
