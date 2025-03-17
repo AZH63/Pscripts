@@ -286,3 +286,9 @@ Update-MgBetaAdminReportSetting -BodyParameter $params
 #Find-MgGraphCommand -Uri '/users/{id}'
 
  https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')
+
+
+
+https://ourcloudnetwork.com/how-to-manage-microsoft-entra-sign-in-logs-with-powershell/
+
+get-mgauditlogsignin
