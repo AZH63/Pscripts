@@ -284,3 +284,5 @@ Update-MgBetaAdminReportSetting -BodyParameter $params
 
 #Find-MgGraphCommand -command
 #Find-MgGraphCommand -Uri '/users/{id}'
+
+ https://graph.microsoft.com/v1.0/reports/getTeamsUserActivityUserDetail(period='D7')
