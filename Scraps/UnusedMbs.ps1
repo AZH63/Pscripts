@@ -234,7 +234,7 @@ Invoke-MgBetaRecentUserActivity -UserId "yoohooo@1x4bs0.onmicrosoft.com" # UserA
 
 
 # Define the URL for the user activity report
-$url = "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D7')" # "Reports.Read.All"
+$url = "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D7')" # "Reports.Read.All" #most likely winner
 
 # Define the output file path
 $outputFilePath = "$env:UserProfile\Downloads\report.csv"
@@ -251,7 +251,36 @@ param (
     
 )
 Connect-MgGraph -Scopes "Reports.Read.All","User.ReadWrite.All"
-$url = "https://graph.microsoft.com/v1.0/reports/getOffice365ActiveUserDetail(period='D30')"
-$report= Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $OutputPath
+$url = "https://graph.microsoft.com/beta/reports/getOffice365ActiveUserDetail(period='D30')"
+$report= Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $OutputPath 
 $stats= import-csv -path $OutputPath
 }
+
+GET 
+
+
+$userid="AlexW@1x4bs0.onmicrosoft.com"
+$url = "https://graph.microsoft.com/beta/reports/getMailboxUsageDetail(period='D30')"
+$report=Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $env:USERPROFILE\Downloads\outlook.csv
+
+
+$url="https://graph.microsoft.com/beta/me/messages?$filter=mentionsPreview/isMentionedeqtrue&$select=subject,sender,receivedDateTime"
+Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $env:USERPROFILE\Downloads\msg.csv 
+
+# user data is jumbled by default: https://learn.microsoft.com/en-us/microsoft-365/admin/activity-reports/activity-reports?view=o365-worldwide#show-user-details-in-the-reports
+# https://learn.microsoft.com/en-us/graph/api/resources/adminreportsettings?view=graph-rest-beta&preserve-view=true
+
+$url= GET https://graph.microsoft.com/beta/admin/reportSettings
+
+# Get-MgBetaAdminReportSetting {ReportSettings.Read.All, ReportSettings.ReadWrite.All} (get the displayconcealednamesvalue)
+#module Import-Module Microsoft.Graph.Beta.Reports
+
+$params = @{
+	displayConcealedNames = $false
+}
+
+Update-MgBetaAdminReportSetting -BodyParameter $params
+
+
+#Find-MgGraphCommand -command
+#Find-MgGraphCommand -Uri '/users/{id}'
