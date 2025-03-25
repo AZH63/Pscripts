@@ -292,3 +292,18 @@ Update-MgBetaAdminReportSetting -BodyParameter $params
 https://ourcloudnetwork.com/how-to-manage-microsoft-entra-sign-in-logs-with-powershell/
 
 get-mgauditlogsignin
+
+$inbox=Get-MgUserMailFolder -UserId $user | Where { $_.DisplayName -eq "Inbox"} | Select -ExpandProperty Id
+Get-MgUserMailFolder -UserId $user -MailFolderId $inbox | Select AdditionalProperties
+
+$uri="https://graph.microsoft.com/v1.0/users/mailFolders/dfb56165-6def-46a7-8b9a-a0fb5ed07830
+/mailFolders/AAMkADQ3MzM1YmQ2LTNkMTAtNDY4ZC04ZjlkLWViN2ExMWM5YTI4MwAuAAAAAABbjjLR1DCUS5BQIL0iW2CMAQBj1B6VlgjUTK7YeJmGqrbGAAAAAAEIAAA="
+Invoke-MgGraphRequest -Method GET -uri $uri
+
+#check totalitemcount and unreaditemcount
+$scopes= @("Mail.Read.Shared", "email" ,"openid","profile","User.Read", "email")
+
+$sent= Get-MgUserMailFolder -UserId $user | Where { $_.DisplayName -eq "Sent Items"} | Select -ExpandProperty Id
+Get-MgUserMailFolder -UserId $user -MailFolderId $sent | Select TotalItemCount, UnreadItemCount
+
+
