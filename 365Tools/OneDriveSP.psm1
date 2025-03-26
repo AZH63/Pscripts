@@ -27,14 +27,18 @@ try {
     
     }
     catch {
-        if (!"C:\Program Files\SharePoint Online Management Shell\Microsoft.Online.SharePoint.PowerShell"){
+        $userOneDrive= "$env:OneDrive\Powershell\Microsoft.Online.SharePoint.PowerShell\"
+        $allusers=  "$env:ProgramFiles\Powershell\Microsoft.Online.SharePoint.PowerShell\"
+        $user="$env:UserProfile\Documents\Powershell\Microsoft.Online.SharePoint.PowerShell\"
+        
+        if (!$userOneDrive -and !$allusers -and !$user){
           Install-Module Microsoft.Online.SharePoint.PowerShell
          
         }
         else  {
-              
-           Import-Module Microsoft.Online.SharePoint.PowerShell -UseWindowsPowerShell -verbose
-           Connect-SPOService -Url $tenantUrl  -ModernAuth $true -AuthenticationUrl "https://login.microsoftonline.com/$FQDN" -UseWindowsPowerShell -ErrorAction Stop 
+              write-verbose "installation detected"
+       
+           Connect-SPOService -Url $tenantUrl  -ModernAuth $true -AuthenticationUrl "https://login.microsoftonline.com/$FQDN" -ErrorAction Stop 
 
         }
     
@@ -47,10 +51,9 @@ Function Get-OneDriveURL
 {
 
     param (
-   [string]$DisplayName
+   [string]$DisplayName=" "
   
     )
-
     if ($PSBoundParameters["DisplayName"]) {
     Get-SPoSite -IncludePersonalSite $true -Limit all -Filter "Url -like '-my.sharepoint.com/personal/$DisplayName'" | Select -ExpandProperty Url 
     }
@@ -67,22 +70,11 @@ Function Remove-PeopleList {
         [string]$user,
         [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
         [string[]]$sharers,
-        [parameter(mandatory=$true,HelpMessage="enter in UPN of administrator currently logged in for if permissions are required")]
         [string]$adminUser
     )
 
-    $displayNames= $sharers | %{
-        if ($_ -like "*@*") {
-              ($_.Split("@"))[0]
-        }
-        else {
-        $_
-      
-      
-      }
-      
-      }
-$urls= $displayNames | % {
+    
+$urls= $sharers | % {
         
       Write-Verbose "grabbing URLs"
         Get-OneDriveURL -DisplayName $_ }
@@ -90,22 +82,19 @@ $urls= $displayNames | % {
     write-verbose "sites grabbed: $urls"
     ForEach ($url in $urls) {
        
-     try { write-verbose "attempting to remove user from with no site admin"
+     try { write-verbose "attempting to remove user"
      Remove-SPOUser -site $url -loginname $user -ErrorAction stop
     }
     catch {
-        write-verbose "permission issue, granting admin privs of user's personal site to admin"
-        Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $true   
+        write-verbose "setting ownership of site"
+        Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true
     try {
-        write-verbose "admin privs set reattempting user remove"
-        Remove-SPOUser -site $url -loginname $user -ErrorAction Stop
-        write-verbose "change successful, reverting permissions"
-        Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false
+        Remove-SPOUser -site $url -loginname $user
+        Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true
     }
         catch {
             write-warning "there was an issue" $Error
-            write-verbose "ensuring admin is revoked"
-            Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false 
+            Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true # for if last remove failed and caught here
         }
         
     }
@@ -116,21 +105,6 @@ $urls= $displayNames | % {
     
 }
 
-
-
-
-
-$displayNames= $sharers | %{
-  if ($_ -like "*@*") {
-        ($_.Split("@"))[0]
-  }
-  else {
-  $_
-
-
-}
-
-}
 
 
 
