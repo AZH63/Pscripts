@@ -37,6 +37,7 @@ try {
         }
         else  {
               write-verbose "installation detected"
+              Import-Module Microsoft.Online.SharePoint.PowerShell  -verbose
        
            Connect-SPOService -Url $tenantUrl  -ModernAuth $true -AuthenticationUrl "https://login.microsoftonline.com/$FQDN" -ErrorAction Stop 
 
@@ -70,11 +71,22 @@ Function Remove-PeopleList {
         [string]$user,
         [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
         [string[]]$sharers,
+        [parameter(mandatory=$true,HelpMessage="enter in UPN of administrator currently logged in for if permissions are required")]
         [string]$adminUser
     )
 
-    
-$urls= $sharers | % {
+    $displayNames= $sharers | %{
+        if ($_ -like "*@*") {
+              ($_.Split("@"))[0]
+        }
+        else {
+        $_
+      
+      
+      }
+      
+      }
+$urls= $displayNames | % {
         
       Write-Verbose "grabbing URLs"
         Get-OneDriveURL -DisplayName $_ }
@@ -82,19 +94,22 @@ $urls= $sharers | % {
     write-verbose "sites grabbed: $urls"
     ForEach ($url in $urls) {
        
-     try { write-verbose "attempting to remove user"
+     try { write-verbose "attempting to remove user from with no site admin"
      Remove-SPOUser -site $url -loginname $user -ErrorAction stop
     }
     catch {
-        write-verbose "setting ownership of site"
-        Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true
+        write-verbose "permission issue, granting admin privs of user's personal site to admin"
+        Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $true   
     try {
-        Remove-SPOUser -site $url -loginname $user
-        Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true
+        write-verbose "admin privs set reattempting user remove"
+        Remove-SPOUser -site $url -loginname $user -ErrorAction Stop
+        write-verbose "change successful, reverting permissions"
+        Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false
     }
         catch {
             write-warning "there was an issue" $Error
-            Set-SPOSite -site $url -loginname $adminUser -IsSiteCollectionAdmin $true # for if last remove failed and caught here
+            write-verbose "ensuring admin is revoked"
+            Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false 
         }
         
     }
@@ -107,14 +122,23 @@ $urls= $sharers | % {
 
 
 
-
-
 # Get the person's site/OneDriveURL
 #set yourself as admin of the personal site-- Set-SPOUser -Site $lee -loginname "yoohooo@1x4bs0.onmicrosoft.com"  -IsSiteCollectionAdmin $true
 #remove affected user: Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com"
 #This will remove the person from the peoplelist
 #remove yourself as admin
 
+Function Get-OneDriveURLGraph {
+  param (
+    [string]$upn
+    
+  )
+ $user= Get-MgBetaUser -filter "UserPrincipalName eq '$upn'" | select UserPrincipalName,Id
+  Get-MgBetaUserDefaultDrive -UserId $user.Id | select -ExpandProperty WebUrl
+  return 
+
+
+}
 
 
 
@@ -128,6 +152,7 @@ $urls= $sharers | % {
 
 
 
+<#
 Connect-SharePointSpo -domain "1x4bs0" -FQDN "1x4bs0.onmicrosoft.com"
 Get-OneDriveUrl -DisplayName "AdeleV"
 
@@ -148,4 +173,4 @@ $Env:PSModulePath.replace("$offender","")
 https://1x4bs0-my.sharepoint.com/personal/leeg_1x4bs0_onmicrosoft_com1/_layouts/15/people.aspx?MembershipGroupId=0
 
 
-Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com"
+Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com" #>
