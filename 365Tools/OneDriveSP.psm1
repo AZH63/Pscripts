@@ -17,8 +17,8 @@ param (
 
     
 )
-
-
+# either use -useWindowsPowershell switch when importing or install only on 5.1, 
+# had the issue where regardless of the switch I was stil authenticating with core on 1 device 
 $tenantUrl="https://$domain-admin.sharepoint.com"
 try {
     
@@ -27,18 +27,17 @@ try {
     
     }
     catch {
-        $userOneDrive= "$env:OneDrive\Powershell\Microsoft.Online.SharePoint.PowerShell\"
-        $allusers=  "$env:ProgramFiles\Powershell\Microsoft.Online.SharePoint.PowerShell\"
-        $user="$env:UserProfile\Documents\Powershell\Microsoft.Online.SharePoint.PowerShell\"
+
+        $installed= Get-Module -ListAvailable -name "Microsoft.Online.SharePoint.PowerShell"
         
-        if (!$userOneDrive -and !$allusers -and !$user){
+        if (!$installed){
           Install-Module Microsoft.Online.SharePoint.PowerShell
          
         }
         else  {
               write-verbose "installation detected"
               Import-Module Microsoft.Online.SharePoint.PowerShell  -verbose
-       
+            
            Connect-SPOService -Url $tenantUrl  -ModernAuth $true -AuthenticationUrl "https://login.microsoftonline.com/$FQDN" -ErrorAction Stop 
 
         }
@@ -130,17 +129,48 @@ $urls= $displayNames | % {
 
 Function Get-OneDriveURLGraph {
   param (
-    [string]$upn
+    [string]$upn,
+    [switch]$beta
     
   )
- $user= Get-MgBetaUser -filter "UserPrincipalName eq '$upn'" | select UserPrincipalName,Id
-  Get-MgBetaUserDefaultDrive -UserId $user.Id | select -ExpandProperty WebUrl
-  return 
+  if ($PSBoundParameters["beta"]) {
+    $user= Get-MgBetaUser -filter "UserPrincipalName eq '$upn'" | select -expandProperty Id
+  $url= Get-MgBetaUserDefaultDrive -UserId $user | select -ExpandProperty WebUrl
+  return $url
+
+  }
+  else {
+ $user= Get-MgUser -filter "UserPrincipalName eq '$upn'" | select -expandProperty Id
+  $url= Get-MgUserDefaultDrive -UserId $user | select -ExpandProperty WebUrl
+  return $url
+  }
 
 
 }
 
 
+Try {
+    Connect-MgGraph -Scopes "Directory.ReadWrite.All", "Sites.ReadWrite.All", "Files.ReadWrite.All" -ErrorAction Stop
+
+}
+catch {
+   
+
+}
+
+
+
+$installed=Get-Module -ListAvailable -name "PnP.PowerShell"
+if (!$installed) {
+Install-Module -Name "PnP.PowerShell" -Verbose
+Import-Module "PnP.PowerShell" -Verbose
+}
+else {
+    Import-Module "PnP.PowerShell" -Verbose
+
+}
+#check for app registration
+#
 
 
 
