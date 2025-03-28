@@ -26,7 +26,7 @@ Function get-Unusedmbs {
         write-verbose "not a UPN, checking "
          try {
             write-verbose "searching by displayname"
-           $res= Get-MgUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
+           $res= Get-MgBetaUser -Search "DisplayName:$_" -ConsistencyLevel eventual -ea Stop
          # $res= Get-AzureADuser -searchstring "$_"
           write-output "$($res.UserPrincipalName)"
           
@@ -63,7 +63,7 @@ $mbstats= foreach ($email in $emails) {
         [datetime]$date= Get-Date
       }
       catch {
-          $err
+          $err 
 
       }
    }
@@ -119,6 +119,7 @@ switch ($PSBoundParameters.keys) {
       }
    }
    default {    
+      write-verbose "$mbstats here"
      $mbstats | export-csv -path $env:UserProfile\Downloads\mbstats.csv  
   
    }
@@ -128,6 +129,40 @@ switch ($PSBoundParameters.keys) {
    
 }
 }
+
+$JL= import-csv -path $env:UserProfile\downloads\user_list.csv
+
+$JL.Email | get-Unusedmbs  
+
+
+
+#add connect-exchangeonline cause...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 $activeusers= get-mgbetauser | Where { $_.AccountEnabled -eq $true} | select -ExpandProperty UserPrincipalName
 # $activeusers |% { Get-MgUserLicenseDetail -userid $_} 
@@ -307,3 +342,38 @@ $sent= Get-MgUserMailFolder -UserId $user | Where { $_.DisplayName -eq "Sent Ite
 Get-MgUserMailFolder -UserId $user -MailFolderId $sent | Select TotalItemCount, UnreadItemCount
 
 
+
+
+$mbs= import-csv $env:OneDrive\mbstatsJM.csv
+
+$statscombined= $mbs | % {
+   $userobj= get-mgbetauser -UserId $_.Name | select JobTitle, Manager, EmployeeId, Department
+   [PSCustomObject]@{
+      Name = $_.Name
+      LastLogonTime= $_.LastLogonTime
+      LastUserActionTime= $_.LastUserActionTime
+      JobTitle = $userobj.JobTitle 
+      Manager= $userobj.Manager
+      EmpId= $userobj.EmployeeId
+      Dept= $userobj.Department
+      
+   }
+
+
+}
+
+$objects=@{
+ReferenceObject= (import-csv -path $env:USERPROFILE\Downloads\user_list.csv) #James List <=
+DifferenceObject= (import-csv -path $env:USERPROFILE\Downloads\UnifiedLogs.csv)
+
+}
+
+Compare-Object @objects -PassThru
+
+$objects=@{
+   ReferenceObject= (import-csv -path $env:USERPROFILE\Downloads\UnifiedLogs.csv)
+   DifferenceObject= (import-csv -path $env:USERPROFILE\Downloads\user_list.csv) #James List <=
+   
+   }
+   
+   Compare-Object @objects -PassThru
