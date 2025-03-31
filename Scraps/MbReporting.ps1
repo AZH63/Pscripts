@@ -8,4 +8,3 @@ $Users | % { Get-AzureADUser -ObjectId $_ | Select UserPrincipalName, AccountEna
 
     Get-Mailbox -identity $_ | Select DisplayName, LitigationHoldEnabled
  }
- #Pls function-itize , add to reporting365 and reconsider this folder structure

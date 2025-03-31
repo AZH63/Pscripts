@@ -262,6 +262,7 @@ Connect-MgGraph -Scopes "AuditLog.Read.All","User.Read.All", "UserActivity.ReadW
 $properties= @("UserPrincipalName","DisplayName","SignInActivity")
 $AllUsers= Get-MgBetaUser -All -Property $properties
 
+$AllUsers.SignInActivity.LastSignInDateTime
 
 Invoke-MgBetaRecentUserActivity -UserId "yoohooo@1x4bs0.onmicrosoft.com" # UserActivity.ReadWrite.CreatedByApp
 
@@ -289,7 +290,9 @@ Connect-MgGraph -Scopes "Reports.Read.All","User.ReadWrite.All"
 $url = "https://graph.microsoft.com/beta/reports/getOffice365ActiveUserDetail(period='D30')"
 $report= Invoke-MgGraphRequest -Method GET -Uri $url -OutputFilePath $OutputPath 
 $stats= import-csv -path $OutputPath
+write-output "$stats"
 }
+# requires UPNs to be unscrambled in admin center setting
 
 GET 
 
