@@ -136,3 +136,5 @@ $upns= $users | Where { $_ -notlike "*EXT*" -and $_ -notlike "*_*" }
     # exo recipient limit - 2k in 24 hrs
     # RX limit is 3600 from 1 sender is 1800?
     # # handy info: https://learn.microsoft.com/en-us/office365/servicedescriptions/exchange-online-service-description/exchange-online-limits
+
+    @{RecipientFilter=((((((RecipientTypeDetails -eq 'UserMailbox') -and (Office -eq 'New York'))) -and (-not(CustomAttribute1 -eq 'Disabled')))) -and (-not(Name -like 'SystemMailbox{*')) -and (-not(Name -like 'CAS_{*')) -and (-not(RecipientTypeDetailsValue -eq 'MailboxPlan')) -and (-not(RecipientTypeDetailsValue -eq 'DiscoveryMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'PublicFolderMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'ArbitrationMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'AuxAuditLogMailbox')) -and (-not(RecipientTypeDetailsValue -eq 'SupervisoryReviewPolicyMailbox')))}
