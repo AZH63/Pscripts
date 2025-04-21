@@ -1,12 +1,12 @@
 
 
-#find name of parameter used to identify users which will be used 
-$Eidentifier= $emailreport | get-member | Where {$_.Name -like "*User Principal Name*" -or $_.Name -like "*UserPrincipalName*" -or $_.Name -like "*UPN*" }
-$Tidentifier= $teamsreport
 
 #or use graph 
 $teamsreport= import-csv -path $env:USERPROFILE\downloads\TeamsReport.csv
 $emailreport= import-csv -path $env:USERPROFILE\downloads\EmailReport.csv
+#find name of parameter used to identify users which will be used 
+$Eidentifier= $emailreport  | Where {$_.Name -like "*User Principal Name*" -or $_.Name -like "*UserPrincipalName*" -or $_.Name -like "*UPN*" }
+$Tidentifier= $teamsreport | Where {$_.Name -like "*User Principal Name*" -or $_.Name -like "*UserPrincipalName*" -or $_.Name -like "*UPN*" }
 
 
 #arraylist to store obj and let us use Add method
@@ -40,3 +40,12 @@ foreach ($em in $emailreport){
 
 $unifiedAudit | export-csv -path $env:UserProfile\downloads\UnifiedAudit.csv -NoTypeInformation
 start  $env:UserProfile\downloads\UnifiedAudit.csv
+
+((Get-Date).AddDays(1)).Day
+
+
+"TeamsUserActivityCounts$((Get-Date).Month)_$(((Get-Date).AddDays(1)).Day)_$((Get-Date).Year"
+
+
+
+
