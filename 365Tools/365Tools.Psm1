@@ -297,21 +297,22 @@ if ($mail  -notlike "*@*") {
     }
     write-host "user is $mail" 
      
-$User=Get-MgUser -Filter "UserPrincipalName eq '$mail'"
+$User=Get-MgBetaUser -Filter "UserPrincipalName eq '$mail'"
 
-$GroupIds= (Get-MgUserMemberOf -UserId $($User.Id)).Id
-$Groupinfo= $GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled  } ## for some reason can't pull these from memberof
+$GroupIds= (Get-MgBetaUserMemberOf -UserId $($User.Id)).Id
+$Groupinfo= $GroupIds | % { Get-MgBetaGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled,Id  } ## for some reason can't pull these from memberof
 
 ForEach ($group in $GroupInfo) {
 
 if ($null -ne $group.Mail) {
 
     if ($group.GroupTypes -cmatch "Unified" -and $group.GroupTypes -notcontains "DynamicMembership") {
-        Write-Host "$($group.Mail) is a 365 group with types: $($group.GroupTypes)"
+        Write-verbose "$($group.Mail) is a 365 group with types: $($group.GroupTypes)"
+        Remove-MgBetaGroupMemberByRef -GroupId $group.Id -DirectoryObjectId $user.Id
     } elseif ( $($group.MailEnabled) -eq $true  -and $group.GroupTypes -notcontains "DynamicMembership") {
-        Write-Host "$($group.Mail) is a mail-enabled security group MESG) with types: $($group.GroupTypes)"
+        Write-verbose "$($group.Mail) is a mail-enabled security group MESG) with types: $($group.GroupTypes)"
     } else {
-        Write-Host "$($group.Mail) does not match any specific conditions."
+        Write-verbose "$($group.Mail) does not match any specific conditions."
     }
 
 
