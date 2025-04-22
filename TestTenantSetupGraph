@@ -43,6 +43,87 @@ Import-Module Microsoft.Graph.Users
 Import-Module Microsoft.Graph.Groups
 }
 
+Function Get-PersonalData{
+
+    $request=(Invoke-RestMethod -uri "https://dummyjson.com/users" -Method Get) 
+    write-verbose "building table"
+    $users=$request.users | % {[PSCustomObject]@{
+        displayName = "$($_.firstname)"+ " "+"$($_.LastName)"
+    
+        JobTitle= $_.Company.title
+        Department= $_.Company.Department
+        OfficeLocation= $_.address.city
+        givenName= $_.firstname
+        surname= $_.lastname
+        MailNickname="$($_.firstname[0])$($_.lastname)"
+    
+    }
+    }
+    $users
+    
+    
+    }
+
+
+
+Function Create-Users {
+    [CmdletBinding(DefaultParameterSetName= 'Default')]
+param (
+
+    [Parameter(HelpMessage="headers: first name, lastname",ParameterSetName="csv")]
+    [switch]$csv,
+    [Parameter(ParameterSetName="csv",Mandatory=$true)]
+    $inputPath,
+    [string]$tenant="1x4bs0.onmicrosoft",
+    [validateRange(1,25)]
+    [int]$number= 25
+    
+)
+
+
+
+if($PSBoundParameters.ContainsKey("csv")) {
+$source=Import-Csv -path $inputPath
+$number=$source.Count
+$range= $source[0..$number]
+}
+else {
+    $users=Get-PersonalData
+
+    
+    $range= $users[0..$number] 
+}
+
+$range| % {
+    $params=@{
+        
+        displayName= $_.displayName
+        mailNickName=$_.mailNickName
+        JobTitle= $_.JobTitle
+        userPrincipalName = "$($_.mailNickName)@$tenant.com"
+        PasswordProfile= @{
+            forceChangePasswordNextSignIn = $true  
+        }
+        department=$_.Department
+        givenName= $_.givenName
+        surname= $_.surname
+        employeeID= (1..2000 | get-random)
+       
+
+    }
+    New-MgUser -BodyParameter $params
+
+
+}
+
+
+
+
+}
+
+
+
+
 $tenant=read-host "enter tenant name (after the @ including the TLD)"
 [int]$UserCount= read-host "how many users?"
 
@@ -54,7 +135,6 @@ $tenant=read-host "enter tenant name (after the @ including the TLD)"
  userPrincipalName = "user$_@$tenant"
 PasswordProfile= @{
     forceChangePasswordNextSignIn = $true   
-    password = "xWwvJ]6NMw+bWH-d"
 }
 }
 New-MgUser -BodyParameter $params

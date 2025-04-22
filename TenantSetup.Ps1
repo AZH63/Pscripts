@@ -12,7 +12,7 @@ Function Generate-Password {
     $charlist= 'a'..'z' + 'A'..'Z' + '0'..'9' + $symbols
     $password= -join (0..$length | % { $charlist | Get-Random })
     $newpass= $password | ConvertTo-SecureString -AsPlainText
-    return $newpass
+    $newpass
     }
     Function Create-Groups {
         param (
@@ -46,7 +46,7 @@ Function Generate-Password {
     }
 }
     
-Function Create-Users {
+Function Create-TestUsers {
  param (
     [parameter(mandatory)]
     [int]$Count,
@@ -67,7 +67,89 @@ $startingpt..$Count| ForEach-Object { $params= @{
 New-MgUser -BodyParameter $params
 Update-MgBetaUser -userId "user$_@$tenant"   -EmployeeId $_
 }
+} 
+
+Function Get-PersonalData{
+
+    $request=(Invoke-RestMethod -uri "https://dummyjson.com/users" -Method Get) 
+    write-verbose "building table"
+    $users=$request.users | % {[PSCustomObject]@{
+        displayName = "$($_.firstname)"+ " "+"$($_.LastName)"
+    
+        JobTitle= $_.Company.title
+        Department= $_.Company.Department
+        OfficeLocation= $_.address.city
+        givenName= $_.firstname
+        surname= $_.lastname
+        MailNickname="$($_.firstname[0])$($_.lastname)"
+    
+    }
+    }
+    $users
+    
+    
+    }
+
+
+
+Function Create-Users {
+    [CmdletBinding(DefaultParameterSetName= 'Default')]
+param (
+
+    [Parameter(HelpMessage="headers: first name, lastname",ParameterSetName="csv")]
+    [switch]$csv,
+    [Parameter(ParameterSetName="csv",Mandatory=$true)]
+    $inputPath,
+    [string]$tenant="1x4bs0.onmicrosoft",
+    [validateRange(1,25)]
+    [int]$number= 25
+    
+)
+
+
+
+if($PSBoundParameters.ContainsKey("csv")) {
+    write-verbose "Csv chosen"
+$source=Import-Csv -path $inputPath
+$number=$source.Count
+$range= $source[0..$number]
 }
+else {
+    write-verbose "fetching fakedata"
+    $users=Get-PersonalData
+
+    
+    $range= $users[0..$number] 
+}
+
+$range| % {
+    $params=@{
+        AccountEnabled= $true
+        displayName= $_.displayName
+        mailNickName=$_.mailNickName
+        JobTitle= $_.JobTitle
+        userPrincipalName = "$($_.mailNickName)@$tenant.com"
+        PasswordProfile= @{
+            forceChangePasswordNextSignIn = $true  
+            password=(Generate-Password)
+        }
+        department=$_.Department
+        givenName= $_.givenName
+        surname= $_.surname
+        employeeID= (1..2000 | get-random)
+       
+
+    }
+    New-MgUser -BodyParameter $params
+
+
+}
+
+
+
+
+}
+
 
 
 Function Disable-Half {
