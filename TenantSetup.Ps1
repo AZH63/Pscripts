@@ -154,8 +154,8 @@ $range| % {
 
 Function Disable-Half {
 param (
-    [parameter(mandatory=$true, HelpMessage=" Admin Users to Exclude")]
-    [string[]]$AdminUsers
+    [parameter( HelpMessage=" Admin Users to Exclude")]
+    [string[]]$AdminUsers= $(Get-PersonalData | Where { $_.JobTitle -like "*support*" -or $_.JobTitle -like "*tech*"} | select MailNickName)
     
 )
 $All= Get-MgUser -All 
