@@ -4,11 +4,6 @@ Contains Modules with functions used typically in the day to day, scripts used s
 works in progress.
 
 
-
-## Getting Started
-
-Extract the folder containing .psm1 files to any valid PowerShell module path. Use $env:PSModulePath -split ";" to view your available paths.
-
 ### Prerequisites
 * Windows system with PowerShell 7 installed (for Graph SDK)
 * Administrator access required for system-wide installations
