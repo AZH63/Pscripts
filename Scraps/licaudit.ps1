@@ -10,8 +10,8 @@ function Get-Groupmember {
        [string] $groupname
     )
     <#| Where-Object  { $_.AdditionalProperties."@odata.type" -eq "#microsoft.graph.user"}#> 
-    $group=Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id
-    $members=Get-MgBetaGroupMember -GroupId $group -All | ForEach-Object {
+    $groupresult=Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id
+    $members=Get-MgBetaGroupMember -GroupId $groupresult -All | ForEach-Object {
        
         [PSCustomObject]@{
             DisplayName = $_.AdditionalProperties.displayName
@@ -19,9 +19,12 @@ function Get-Groupmember {
             JobTitle = $_.AdditionalProperties.jobTitle
             EmployeeType = $_.AdditionalProperties.employeeType
             Id = $_.Id
+            groupid= $groupresult
+            groupName=$groupname
+
         }
     }
-    $members
+   $members
 }
 
 
@@ -39,19 +42,25 @@ function search-object {
       [validateset("JobTitle","department","name")]
       [string] $property,
       [parameter(Mandatory=$true, ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
-      [object]$object
+      [object]$inputobject
       
     ) 
     
-    
+    begin {
+$results= [System.Collections.ArrayList]::new()
+    }
+    process {
     $filterScript= {
 
         $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") 
     }
-    
-  $object | Where-Object -FilterScript $filterScript
+
+  $results.Add($($inputobject | Where-Object -FilterScript $filterScript)) | Out-Null
       
-    
+}
+end {
+$results
+}
     }
 
 
@@ -59,7 +68,12 @@ function search-object {
 $group= Read-Host "groupname pls"
 $groupMembers= Get-Groupmember -groupname $group
 
-$groupMembers | search-object -property "JobTitle" -term1 "lead" -term2 "Supervisor" 
+$exceptions= $groupMembers | search-object -property "JobTitle" -term1 "lead" -term2 "Supervisor" 
+export-csv -path $env:USERPROFILE\downloads\exceptions.csv
+$exceptions | % {
+ Remove-MgBetaGroupMemberByRef -GroupId $($groupMembers[0].groupid) -DirectoryObjectId $_.Id -WhatIf
+
+} 
 
 
 
