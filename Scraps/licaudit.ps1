@@ -4,7 +4,7 @@
 # for the remainders just remove their mailenableds and store that in another obj then export
 
 
-function Get-Groupmember {
+function Get-GroupmemberMg {
 
     param (
        [string] $groupname
@@ -35,9 +35,11 @@ function search-object {
 
     #>
     param (
+        [CmdletBinding(DefaultParameterSetName= 'Default')]
     [parameter(Mandatory=$true)]
       $term1,
       $term2,
+      $term3,
       [parameter(Mandatory=$true)]
       [validateset("JobTitle","department","name")]
       [string] $property,
@@ -52,7 +54,7 @@ $results= [System.Collections.ArrayList]::new()
     process {
     $filterScript= {
 
-        $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") 
+        $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") -or ($term3 -and $_.$property -like "*$term3*")
     }
 
   $results.Add($($inputobject | Where-Object -FilterScript $filterScript)) | Out-Null

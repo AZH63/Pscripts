@@ -388,6 +388,66 @@ $newpass= $password | ConvertTo-SecureString -AsPlainText
 return $newpass
 }
 
+function Get-GroupmemberMg {
+
+    param (
+       [string] $groupname
+    )
+    <#| Where-Object  { $_.AdditionalProperties."@odata.type" -eq "#microsoft.graph.user"}#> 
+    $groupresult=Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id
+    $members=Get-MgBetaGroupMember -GroupId $groupresult -All | ForEach-Object {
+       
+        [PSCustomObject]@{
+            DisplayName = $_.AdditionalProperties.displayName
+            UserPrincipalName = $_.AdditionalProperties.userPrincipalName
+            JobTitle = $_.AdditionalProperties.jobTitle
+            EmployeeType = $_.AdditionalProperties.employeeType
+            Id = $_.Id
+            groupid= $groupresult
+            groupName=$groupname
+
+        }
+    }
+   $members
+}
+
+
+function search-object {
+    <#
+    .DESCRIPTION
+    filters based on property and searchterms
+
+    #>
+    param (
+        [CmdletBinding(DefaultParameterSetName= 'Default')]
+    [parameter(Mandatory=$true)]
+      $term1,
+      $term2,
+      $term3,
+      [parameter(Mandatory=$true)]
+      [validateset("JobTitle","department","name")]
+      [string] $property,
+      [parameter(Mandatory=$true, ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+      [object]$inputobject
+      
+    ) 
+    
+    begin {
+$results= [System.Collections.ArrayList]::new()
+    }
+    process {
+    $filterScript= {
+
+        $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") -or ($term3 -and $_.$property -like "*$term3*")
+    }
+
+  $results.Add($($inputobject | Where-Object -FilterScript $filterScript)) | Out-Null
+      
+}
+end {
+$results
+}
+    }
 
 
 
