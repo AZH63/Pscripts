@@ -226,17 +226,20 @@ $mb
 }
 
 
-Function Add-Forwarding {}
-
-Function Convert-Shared{
-
-}
-
 Function Disable-SharedMb {
- 
-    $Mbs= get-mailbox -filter " RecipientTypeDetails -eq 'SharedMailbox' " | Select  PrimarySmtpAddress, AccountEnabled
-    $Bad= $Mbs | Where { $_.AccountEnabled -eq $true}
-    $Bad | % { Set-AzureADUser -ObjectID $_.PrimarySmtpAddress  -AccountEnabled $false }
+
+    $mbs= get-mailbox -filter " RecipientTypeDetails -eq 'SharedMailbox' " | Select -ExpandProperty  PrimarySmtpAddress
+       write-verbose "shared mbs found: $mbs "
+
+    $userobj= $mbs | % { Get-MgBetaUser -u
+        serid $($_) | select AccountEnabled,Id,UserPrincipalName }
+   Write-Verbose "user obj found in entra, $userobj"
+    $bad= $userobj | Where AccountEnabled -eq $true
+    write-verbose "these mbs are enabled: $bad"
+
+
+     $param=@{AccountEnabled= $false}
+    $bad | % {update-mgbetauser -userid $($_.id) -BodyParameter $param}
     }
 
 Function Search-MailboxesExport{
