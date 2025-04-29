@@ -116,37 +116,6 @@ Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
 }
 
 
-
-
-
-<# Function Get-GroupMembership {
-# any groups that are mail-enabled use the email address, no email Sec groups can use 
-    [CmdletBinding()] 
-    param ( 
-    [parameter(mandatory, ValueFromPipeline)]
-    [string[]]$GroupsToSearch )
-
-begin {
-    
- $Groups= $GroupsToSearch | ForEach-Object {
-    if ($null -eq $_.) {
- }
-}
- }
-
-process {
-       
-
-}
-end {
-    
-}
-} 
-
-#>
-
-
-
 Function Update-DDLSAzureAD {
 
     
@@ -172,9 +141,6 @@ Function Update-DDLSAzureAD {
     $AzureInfo
     
 }
-
-
-
 
 
 Function Update-PrimarySmtpAddress {
@@ -368,11 +334,6 @@ Function Remove-MailEnabledAzureAD {
 
 }
 
-<# Remove sec group menu driven function, maybe use indexes as switch choices #>
-
-
-
-#
 
 Function Generate-Password {
 param (
@@ -390,7 +351,30 @@ $password= -join (0..$length | % { $charlist | Get-Random })
 $newpass= $password | ConvertTo-SecureString -AsPlainText
 return $newpass
 }
+Function Get-GroupId {
+    [CmdletBinding()]
+param(
+    [string] $groupname
 
+)
+    $groupresult= ($groupname -like "*@*") ? (Get-MgBetaGroup -filter "Mail eq '$groupname'" | select -ExpandProperty id): (Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id)
+
+    if ($null -eq $groupresult ) {
+       Write-Warning "result not found check groupname"
+       return
+    }
+   elseif (($groupresult.GetType()).Name -ne "String") {
+        write-warning "possibly Ambiguous result be more specific..."
+       $groupresult | % {
+                 
+            Get-MgBetaGroup -GroupId $_ | select DisplayName, Mail, Id
+        } 
+        
+        return
+    }
+write-verbose "group fed:$groupname, result found:$groupresult type: $($groupresult.GetType())"
+$groupresult
+}
 function Get-GroupmemberMg {
     [CmdletBinding()]
     param (
@@ -406,10 +390,15 @@ function Get-GroupmemberMg {
             Write-Warning "result not found check groupname"
             break
          }
+         if (($groupresult.GetType()).Name -ne "String") {
+             write-warning "possibly Ambiguous result be more specific..."
+             $groupresult
+             break
+         }
     
    
 
-    write-verbose "group fed:$groupname, result found:$groupresult"
+    write-verbose "group fed:$groupname, result found:$groupresult type: $($groupresult.GetType())"
 
   
     $members=Get-MgBetaGroupMember -GroupId $groupresult -All | ForEach-Object {
@@ -464,6 +453,8 @@ end {
 $results
 }
     }
+
+
 
 
     
