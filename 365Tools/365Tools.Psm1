@@ -392,12 +392,26 @@ return $newpass
 }
 
 function Get-GroupmemberMg {
-
+    [CmdletBinding()]
     param (
+        [parameter(Mandatory=$true)]
        [string] $groupname
+       
     )
     <#| Where-Object  { $_.AdditionalProperties."@odata.type" -eq "#microsoft.graph.user"}#> 
-    $groupresult=Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id
+    
+        $groupresult= ($groupname -like "*@*") ? (Get-MgBetaGroup -filter "Mail eq '$groupname'" | select -ExpandProperty id): (Get-MgbetaGroup -filter "displayname eq '$groupname'" | select -ExpandProperty id)
+
+         if ($null -eq $groupresult ) {
+            Write-Warning "result not found check groupname"
+            break
+         }
+    
+   
+
+    write-verbose "group fed:$groupname, result found:$groupresult"
+
+  
     $members=Get-MgBetaGroupMember -GroupId $groupresult -All | ForEach-Object {
        
         [PSCustomObject]@{
@@ -413,7 +427,6 @@ function Get-GroupmemberMg {
     }
    $members
 }
-
 
 function search-object {
     <#
@@ -452,6 +465,8 @@ $results
 }
     }
 
+
+    
 
 
 

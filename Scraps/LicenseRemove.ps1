@@ -33,7 +33,7 @@ forEach ($user in $userobj) {
      }
 }
 
-#if for some reason no organization.ReadAll, convert the string to a guid obj using new-guid or you could yknow- ask for the permission
+#if forgot to add organization.ReadAll, convert the string to a guid obj using new-guid  
 
 $teams= import-csv -path $env:userprofile\downloads\TeamsEssentials.csv
 $alreadyin= [System.Collections.ArrayList]::new()
@@ -95,3 +95,5 @@ $teams | % {
 
      }
 }
+
+
