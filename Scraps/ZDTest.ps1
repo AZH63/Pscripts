@@ -21,8 +21,8 @@ param (
 
 )
   
-$license= ($PSBoundParameters.ContainsKey('upn'))?(Get-MgBetaUserLicenseDetail -userId $upn | select * ): (Get-MgBetaSubscribedSku)
-write-verbose "$license"
+$license= if ($PSBoundParameters.ContainsKey('upn')) {Get-MgBetaUserLicenseDetail -userId $upn | select *} {Get-MgBetaSubscribedSku}
+write-verbose "$license" 
 
 $licenseinfo= $license | Where { $_.SkuPartNumber -like "*$($PSBoundParameters["skuname"])*"} | select SkuPartNumber,SkuId 
 if ($licenseinfo.Count -gt 1) {
@@ -31,7 +31,7 @@ return
 
 }
 else {
-New-Guid -InputObject "$($licenseinfo.SkuId)"
+New-Guid  "$($licenseinfo.SkuId)"
 }
 
 }
