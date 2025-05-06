@@ -65,55 +65,7 @@ $AzureInfo | ForEach-Object {
     
     }
     }
-Function Disable-User {
-    
-    param(
-        [Parameter(Mandatory)]
-        [string[]]$UPN,
-        [switch]$Graph
-    )
-Add-Type -AssemblyName 'System.Web'
 
-if ($Graph) {
-
-
-   $Users= forEach ($Up in $UPN) {
-        if ($Up -like "*@*") {
-       Get-MgBetaUser -filter " mail eq '$Up'" -ConsistencyLevel eventual 
-        }
-        else {
-             Get-MgBetaUser -Search "DisplayName:$Up" -ConsistencyLevel eventual
-        }
-      
-
-    }
-    Write-Host "users grabbed: $($Users.UserPrincipalName)"
-    Write-Verbose -message "generating new password"
-ForEach ($user in $Users) {
-$newpass= Generate-Password # same module
-Write-Verbose -Message "resetting password"
-$params=@{ newPassword= $newpass}
-$authenticationMethodId= "28c10230-6103-485e-b985-444c60001490" #always
-Reset-MgUserAuthenticationMethodPassword -UserId $($user.Id) -AuthenticationMethodId $authenticationMethodId -BodyParameter $params
-
-}
-
-}
-
-
-    else {
-$User= Get-AzureADUser -SearchString "$UPN"
-Write-Verbose -message "generating new password"
-$randomPassword = [System.Web.Security.Membership]::GeneratePassword(12, 2)
-$newpass= $randomPassword | ConvertTo-SecureString -AsPlainText -Force
-Write-Verbose -Message "resetting password"
-Set-AzureADUserPassword -ObjectId $($User.ObjectId) -Password $newpass
-Write-Verbose -Message "revoking sessions"
-Revoke-AzureADUserAllRefreshToken -objectId $($User.ObjectId)
-Write-Verbose -Message "disabling"
-Set-AzureADUser -ObjectId $($User.UserPrincipalName) -AccountEnabled $false
-}
-}
 
 
 Function Update-DDLSAzureAD {
@@ -453,13 +405,6 @@ end {
 $results
 }
     }
-
-
-
-
-    
-
-
 
 
 
