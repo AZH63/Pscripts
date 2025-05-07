@@ -2,8 +2,8 @@
 $LicensedEnabled=[System.Collections.ArrayList]::new()
 $LicensedDisabled=[System.Collections.ArrayList]::new()
 $NonLicensed=[System.Collections.ArrayList]::new()
-$AllUsers=Get-AzureADUser -Filter "employeeId ge '0'" -All $true | Select UserPrincipalName,AccountEnabled, AssignedLicenses
-
+ 
+$AllUsers= Get-AzureADUser -filter "employeeId ge '123'" -All $true | Select UserPrincipalName,AccountEnabled, AssignedLicenses
 $AllUsers | ForEach-Object {
 if ( $_.AccountEnabled -eq $false -and $_.AssignedLicenses -ne "null") {
 
@@ -42,7 +42,7 @@ Write-Output " $($_.UserPrincipalName) not licensed"
 
 
 }
-return  
+
 $LicensedEnabled | Export-Csv -Path $env:UserProfile\Downloads\LicensedEnabled.csv -NoTypeInformation
 $LicensedDisabled| Export-Csv -Path $env:UserProfile\Downloads\LicensedDisabled.csv -NoTypeInformation
 $NonLicensed | Export-Csv -Path $env:UserProfile\Downloads\NonLicensed.csv -NoTypeInformation

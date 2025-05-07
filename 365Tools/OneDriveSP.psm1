@@ -173,9 +173,17 @@ else {
 #
 
 
+$users= Get-MgBetaUser -All | select OnPremisesImmutableId, OnPremisesSyncEnabled, UserPrincipalName
+
+$users | where { $_.OnPremisesSyncEnabled -ne $null }
+
+$immutable= $users | Where { $_.OnPremisesImmutableId -ne $null }
 
 
+Update-MgBetaUser -userid "ahorton@baldorfood.com" -OnPremisesImmutableId "$null"
 
+Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/Users/{$ahorton}" -Body @{OnPremisesImmutableId = "some-immutable-id"}
+Update-MgBetaUser -userid "ahorton@baldorfood.com" -OnPremisesImmutableId "$null"
 
 
 

@@ -28,3 +28,11 @@ $OrphanlistDist | % {
   write-host ""
 
 }
+
+#group expired no manager
+# find the members
+#search the members grab dept and title
+# if title says 'manager' 
+   # list 
+      # if only 1 promote
+# if more than 1...  
