@@ -36,6 +36,30 @@ New-Guid  "$($licenseinfo.SkuId)"
 
 }
 
+function offboard-user {
+
+   param (
+    [object[]]$upn
+    
+   )
+
+   $weborders= [System.Collections.ArrayList]::new()
+  
+Get-Mailbox -filter "ForwardingSmtpAddress -like '$domain*'" |Select -expandProperty PrimarySmtpAddress tee-object -variable mbs
+ $weborders.Add( [PSCustomObject]@{
+    mail = $_
+    Licenses= $license.SkuPartNumber
+    licensesku= $license.SkuId
+  })
+
+
+
+
+     } 
+
+
+}
+
 
 
 
