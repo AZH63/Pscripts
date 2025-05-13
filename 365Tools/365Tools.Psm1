@@ -407,6 +407,34 @@ $results
     }
 
 
+Get-MgBetaUserMemberOf -UserId $upn
+
+
+Function Add-GroupMember {
+param (
+    [string]$upns,
+    [string]$group    
+)
+
+foreach ( $u in $upn) {
+    $params = @{
+        "@odata.id" = 
+    "https://graph.microsoft.com/v1.0/directoryObjects/{$((Get-MgUser -userid $upn).id)}"     
+    }
+    write-verbose "addin"
+    New-MgGroupMemberByRef -GroupId $groupId -BodyParameter      
+    $params
+    }
+    
+
+}
+
+Function Remove-Groups {
+param (
+    [string]
+)
+
+}
 
 
 
@@ -416,12 +444,22 @@ $results
 
 
 
+Get-MgBetaGroupMemberOf
 
 
 
 
+Invoke-MgGraphRequest -Method GET -uri $uri | ConvertTo-Json
+
+$user
+ForEach($use in $user) {
+
+$uri = "https://graph.microsoft.com/v1.0/users/$((Get-MgBetaUser -userid "yoohooo@1x4bs0.onmicrosoft.com").Id)/memberOf"
+invoke-MgGraphRequest -Method GET $uri $uri | convert-ToJson
 
 
+
+}
 <# Measure-Command {Get-MgUserMemberOf -UserId $User.Id | Select Id }
 
 Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id } (winner)
