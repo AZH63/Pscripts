@@ -1,17 +1,72 @@
-function Convert-weborders 
-{
-param (
-    [string]$domain
-)
+
 Get-Mailbox -filter "ForwardingSmtpAddress -like '$domain*'" |Select -expandProperty PrimarySmtpAddress tee-object -variable mbs
-$mbs | % {  
-write-verbose "converting to shared mailboxes"
+function Convert-weborders {
+    [CmdletBinding()] 
+param (
+    [string[]]$upn,
+    [switch]$removelicense
+)
+write-verbose "$upn"
+$upn | % {  
+    $info= get-mailbox -identity $_ | select -ExpandProperty PrimarySMTPaddress
+   
+write-verbose -Message "converting to shared mailbox $info"
 Set-mailbox -identity $_ -Type Shared
+
+if ($PSBoundParameters.ContainsKey('removelicense')) {
+    
+  $license= Get-MgBetaUserLicenseDetail -UserId $_ | select -ExpandProperty SkuId
+  write-verbose "removing license found: $license"
+  Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{}
+  $params=@{AccountEnabled=$false}
+  Update-MgBetaUser -UserId $_ -BodyParameter $params
+
+}
 #add it to csv and update csv with each iteration to track changes 
 }
+
 }
 
-function Convert-sku {
+
+
+
+
+
+$weborders= import-csv -path $env:UserProfile\downloads\WebordersConverted.csv
+
+$next=$weborders| Where { $_.status -ne "converted"} | select -expandProperty UPN
+
+
+
+
+
+$weborders= $weborders.UPN | % {
+
+   if ($_ -notlike "*@*") {
+      $_= "$_@baldorfood.com"
+
+   }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function convert-sku {
     [CmdletBinding()]
 param (
     [string]$upn,
@@ -31,37 +86,103 @@ return
 
 }
 else {
+    write-verbose " Sku id found: $($licenseinfo.SkuId)"
 New-Guid  "$($licenseinfo.SkuId)"
 }
 
 }
 
-function offboard-user {
-
-   param (
-    [object[]]$upn
-    
-   )
-
-   $weborders= [System.Collections.ArrayList]::new()
-  
-Get-Mailbox -filter "ForwardingSmtpAddress -like '$domain*'" |Select -expandProperty PrimarySmtpAddress tee-object -variable mbs
- $weborders.Add( [PSCustomObject]@{
-    mail = $_
-    Licenses= $license.SkuPartNumber
-    licensesku= $license.SkuId
-  })
+set-mgbetauserlicense -userid $_."Object Id" -RemoveLicenses @($teamsguid) -AddLicenses @{}
 
 
 
+Get-MgBetauserlicenseDetail -userid "userweborders1@baldorfood.com"  | select -expandProperty SkuId | tee-object -variable test
+s> set-mgbetauserlicense -userid "userweborders1@baldorfood.com" -RemoveLicenses @($test) -AddLicense @{}
 
-     } 
+Offboard-user {
+ param (
+    [string]$upn,
+    [string]$delegate
+ )
+ 
+ set-mailbox -Identity $($PSBoundParameters["upn"]) -type Shared
+
+if ($PSBoundParameters.ContainsKey('delegate')) {
+ 
+  Add-MailboxPermission -Identity $PSBoundParameters["upn"]
 
 
 }
 
 
+}
+
+
+$mbs= Get-Mailbox -filter "RecipientTypeDetails -eq 'UserMailbox' "
+
+$records= [PSCustomObject]@{
+    
+}
+$mbs[0..5] | % {
+  Get-MessageTrace -SenderAddress $($_.PrimarySMTPaddress) -RecipientAddress ("*@Baldorfood.com*")
+ $records | add-member -NotePropertyName "SenderAdd" -NotePropertyValue "$($_.PrimarySMTPaddress)" -Force
+$records |add-member -NotepropertyName "Recipient" -NotePropertyValue "$($_.RecipientAddress)" -Force
+}
+$mbs[6..-1]
 
 
 
+$users= Get-MgBetaUser -All
+ $users | where { $_.employeetype -like "*terminated*"} | tee-object -variable term
+$term | % {
+ Set-mailbox -Identity $_.UserPrincipalName -Type Shared 
+ $license=Get-MgBetaUserlicensedetail -userid $_.UserPrincipalName | select SkuId,SkuPartNumber
+try {
+    if ($license.Count -gt 0) {
+        foreach ($lic in $license) {
+            Set-MgBetaUserLicense -UserId $($_.UserPrincipalName) -RemoveLicenses @($lic) -AddLicenses @{}
+
+        }
+    }
+    set-MgBetaUserLicense -userid $($_.UserPrincipalName) -RemoveLicenses @( $license.SkuId) -AddLicenses @{} -erroraction Stop
+}
+catch {
+    write-warning "check $($_.UserPrincipalName)"
+}
+
+}
+
+$e3Today= import-csv -path $env:USERPROFILE\Downloads\E3TOday.csv
+
+$e3May= $e3Today | % {
+      $entra= get-mgbetauser -userid $_.'User principal name' | select *
+      $skus= Get-MgBetaUserLicenseDetail -userid $_.'User Principal Name' | select -ExpandProperty SkuId
+   [PSCustomObject]@{
+    Name= $_."User Principal Name"
+    License= $_.AssignedProductSkus
+    LicenseSku= $skus -join","
+    status= $entra.EmployeeType
+    jobtitle= $entra.JobTitle
+    ForwardingAdd= (Get-Mailbox -Identity $_.'User Principal Name' | select ForwardingSmtpAddress)
+    
+   }
+}
+
+$servicee3= import-csv -path $env:OneDrive\ServiceAccountsE3.csv
+
+
+$weborders= Get-Mailbox -filter "ForwardingSmtpAddress -like '*'" | select ForwardingSmtpAddress,PrimarySMTPaddress
+
+$wbs= $weborders | % {
+[PSCustomObject]@{
+    Name = $_.PrimarySMTPaddress
+    'ZD Add'= ($_.ForwardingSmtpAddress).Remove(0,6)
+    triggers= Get-MessageTrace -SenderAddress $($_.PrimarySMTPaddress) -RecipientAddress $_.'ZD Add' -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -PageSize 1 | start-sleep  -seconds 500 -Verbose
+}
+start-sleep -Milliseconds 500
+
+}
+
+
+ 
 
