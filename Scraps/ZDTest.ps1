@@ -36,14 +36,19 @@ $params=@{
 }
 write-verbose "revoking sessions, resetting password and disabling "
 Revoke-MgUserSignInSession -UserId $_
-  Update-MgBetaUser -UserId $_ -BodyParameter $params
+Update-MgBetaUser -UserId $_ -BodyParameter $params
 
 if ($PSBoundParameters.ContainsKey('removelicense')) {
     
   $license= Get-MgBetaUserLicenseDetail -UserId $_ | select -ExpandProperty SkuId
+  if ($null -eq $license) {
+    write-warning "no license found"
+
+  }
+  else {
   write-verbose "removing license found: $license"
   Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{}
-  
+  }
 
 }
 
