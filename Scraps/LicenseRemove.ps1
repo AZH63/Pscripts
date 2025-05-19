@@ -97,3 +97,5 @@ $teams | % {
 }
 
 
+$username="yoohooo@1x4bs0.onmicrosoft.com"
+$password=""

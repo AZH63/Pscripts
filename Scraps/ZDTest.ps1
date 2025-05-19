@@ -1,4 +1,20 @@
 
+Function Generate-Password {
+    param (
+        
+    [ValidateRange(12, 256)]
+    [int]$length = 14
+    )
+    <#
+    .Description 
+    .Net Core doesn't have [system.web] :(
+    #>
+    $symbols= '!@#$%^&*'.ToCharArray()
+    $charlist= 'a'..'z' + 'A'..'Z' + '0'..'9' + $symbols
+    $password= -join (0..$length | % { $charlist | Get-Random })
+    $newpass= $password | ConvertTo-SecureString -AsPlainText
+    return $newpass
+    }
 Get-Mailbox -filter "ForwardingSmtpAddress -like '$domain*'" |Select -expandProperty PrimarySmtpAddress tee-object -variable mbs
 function Convert-weborders {
     [CmdletBinding()] 
@@ -8,47 +24,36 @@ param (
 )
 write-verbose "$upn"
 $upn | % {  
-    $info= get-mailbox -identity $_ | select -ExpandProperty PrimarySMTPaddress
-   
 write-verbose -Message "converting to shared mailbox $info"
 Set-mailbox -identity $_ -Type Shared
+$params=@{
+    AccountEnabled=$false 
+    EmployeeType="Shared Mailbox"
+  passwordProfile=@{
+    forceChangePasswordNextSignIn=$false
+    password= $(Generate-Password)
+  }
+}
+write-verbose "revoking sessions, resetting password and disabling "
+Revoke-MgUserSignInSession -UserId $_
+  Update-MgBetaUser -UserId $_ -BodyParameter $params
 
 if ($PSBoundParameters.ContainsKey('removelicense')) {
     
   $license= Get-MgBetaUserLicenseDetail -UserId $_ | select -ExpandProperty SkuId
   write-verbose "removing license found: $license"
   Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{}
-  $params=@{AccountEnabled=$false}
-  Update-MgBetaUser -UserId $_ -BodyParameter $params
-
-}
-#add it to csv and update csv with each iteration to track changes 
-}
+  
 
 }
 
 
-
-
-
-
-$weborders= import-csv -path $env:UserProfile\downloads\WebordersConverted.csv
-
-$next=$weborders| Where { $_.status -ne "converted"} | select -expandProperty UPN
-
-
-
-
-
-$weborders= $weborders.UPN | % {
-
-   if ($_ -notlike "*@*") {
-      $_= "$_@baldorfood.com"
-
-   }
-
+}
 
 }
+
+
+
 
 
 
