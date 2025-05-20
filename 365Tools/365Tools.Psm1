@@ -369,45 +369,10 @@ function Get-GroupmemberMg {
    $members
 }
 
-function search-object {
-    <#
-    .DESCRIPTION
-    filters based on property and searchterms
-
-    #>
-    param (
-        [CmdletBinding(DefaultParameterSetName= 'Default')]
-    [parameter(Mandatory=$true)]
-      $term1,
-      $term2,
-      $term3,
-      [parameter(Mandatory=$true)]
-      [validateset("JobTitle","department","name")]
-      [string] $property,
-      [parameter(Mandatory=$true, ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
-      [object]$inputobject
-      
-    ) 
-    
-    begin {
-$results= [System.Collections.ArrayList]::new()
-    }
-    process {
-    $filterScript= {
-
-        $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") -or ($term3 -and $_.$property -like "*$term3*")
-    }
-
-  $results.Add($($inputobject | Where-Object -FilterScript $filterScript)) | Out-Null
-      
-}
-end {
-$results
-}
-    }
 
 
-Get-MgBetaUserMemberOf -UserId $upn
+
+
 
 
 Function Add-GroupMember {
@@ -429,12 +394,50 @@ foreach ( $u in $upn) {
 
 }
 
-Function Remove-Groups {
+function convert-users {
+    [CmdletBinding()] 
 param (
-    [string]
+    [string[]]$upn,
+    [switch]$removelicense
 )
+write-verbose "$upn"
+$upn | % {  
+write-verbose -Message "converting to shared mailbox $info"
+Set-mailbox -identity $_ -Type Shared
+$params=@{
+    AccountEnabled=$false 
+    EmployeeType="Shared Mailbox"
+  passwordProfile=@{
+    forceChangePasswordNextSignIn=$false
+    password= $(Generate-Password)
+  }
+}
+write-verbose "revoking sessions, resetting password and disabling "
+Revoke-MgBetaUserSignInSession -UserId $_
+Update-MgBetaUser -UserId $_ -BodyParameter $params
+
+if ($PSBoundParameters.ContainsKey('removelicense')) {
+    
+  $license= Get-MgBetaUserLicenseDetail -UserId $_ | select -ExpandProperty SkuId
+  if ($null -eq $license) {
+    write-warning "no license found"
+
+  }
+  else {
+  write-verbose "removing license found: $license"
+  Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{}
+  }
 
 }
+
+
+}
+
+}
+
+
+
+
 
 
 

@@ -1,5 +1,5 @@
 
-Function Generate-Password {
+Function generate-password {
     param (
         
     [ValidateRange(12, 256)]
@@ -15,8 +15,7 @@ Function Generate-Password {
     $newpass= $password | ConvertTo-SecureString -AsPlainText
     return $newpass
     }
-Get-Mailbox -filter "ForwardingSmtpAddress -like '$domain*'" |Select -expandProperty PrimarySmtpAddress tee-object -variable mbs
-function Convert-weborders {
+function convert-users {
     [CmdletBinding()] 
 param (
     [string[]]$upn,
@@ -35,7 +34,7 @@ $params=@{
   }
 }
 write-verbose "revoking sessions, resetting password and disabling "
-Revoke-MgUserSignInSession -UserId $_
+Revoke-MgBetaUserSignInSession -UserId $_
 Update-MgBetaUser -UserId $_ -BodyParameter $params
 
 if ($PSBoundParameters.ContainsKey('removelicense')) {
@@ -62,6 +61,23 @@ if ($PSBoundParameters.ContainsKey('removelicense')) {
 
 
 
+
+
+
+Get-Mailbox -filter "forwardingsmtpaddress -like '*zendesk.com'" | tee-object -variable weborders
+$WebordersProgress=  [System.Collections.ArrayList]::new()
+
+$weborders | % {
+
+   $WebordersProgress.Add( [PSCustomObject]@{
+        Name = $_.UserPrincipalName
+        Converted= ($_.RecipientTypeDetails -eq "SharedMailbox") ? "converted" : "no"
+
+    } )| Out-Null
+
+}
+
+#tee-obj won't overwrite a variable if output is null
 
 
 

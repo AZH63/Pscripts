@@ -106,4 +106,39 @@ write-verbose "groups passed $Groups ( if any is missing its probably something 
     }
 
    
-      
+    function search-object {
+        <#
+        .DESCRIPTION
+        filters based on property and searchterms
+    
+        #>
+        param (
+            [CmdletBinding(DefaultParameterSetName= 'Default')]
+        [parameter(Mandatory=$true)]
+          $term1,
+          $term2,
+          $term3,
+          [parameter(Mandatory=$true)]
+          [validateset("JobTitle","department","name")]
+          [string] $property,
+          [parameter(Mandatory=$true, ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true)]
+          [object]$inputobject
+          
+        ) 
+        
+        begin {
+    $results= [System.Collections.ArrayList]::new()
+        }
+        process {
+        $filterScript= {
+    
+            $_.$property -like "*$term1*" -or ($term2 -and $_.$property -like "*$term2*") -or ($term3 -and $_.$property -like "*$term3*")
+        }
+    
+      $results.Add($($inputobject | Where-Object -FilterScript $filterScript)) | Out-Null
+          
+    }
+    end {
+    $results
+    }
+        }
