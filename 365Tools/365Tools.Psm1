@@ -398,7 +398,8 @@ function convert-users {
     [CmdletBinding()] 
 param (
     [string[]]$upn,
-    [switch]$removelicense
+    [switch]$removelicense,
+    [swtich]$service
 )
 write-verbose "$upn"
 $upn | % {  
@@ -406,7 +407,7 @@ write-verbose -Message "converting to shared mailbox $info"
 Set-mailbox -identity $_ -Type Shared
 $params=@{
     AccountEnabled=$false 
-    EmployeeType="Shared Mailbox"
+    EmployeeType=($PSBoundParameters.ContainsKey('service'))?"Shared Mailbox": "$(Get-MgBetaUser -userid $_ | select -ExpandProperty EmployeeType)"
   passwordProfile=@{
     forceChangePasswordNextSignIn=$false
     password= $(Generate-Password)
@@ -432,10 +433,7 @@ if ($PSBoundParameters.ContainsKey('removelicense')) {
 
 
 }
-
 }
-
-
 
 
 
