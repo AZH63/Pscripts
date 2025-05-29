@@ -81,7 +81,23 @@ $weborders | % {
 #tee-obj won't overwrite a variable if output is null
 
 
+Get-MgBetaUser -All | Tee-Object -Variable users
 
+$users | % {
+  if ($_.Mail -ne $null) {
+    set-mailbox -identity $($_.UserPrincipalName) -CustomAttribute1 "disa
+    "
+
+
+  }
+else {
+
+
+    
+}
+
+
+}
 
 
 
