@@ -399,11 +399,11 @@ function convert-users {
 param (
     [string[]]$upn,
     [switch]$removelicense,
-    [swtich]$service
+    [switch]$service
 )
 write-verbose "$upn"
 $upn | % {  
-write-verbose -Message "converting to shared mailbox $info"
+write-verbose -Message "converting to shared mailbox"
 Set-mailbox -identity $_ -Type Shared
 $params=@{
     AccountEnabled=$false 
@@ -471,3 +471,22 @@ measure-command { $GroupIds | % { Get-MgGroup -GroupId $_   } }
 
 
 #>
+
+Get-MgBetaUser -All | Tee-Object -Variable users  
+
+$users | % {
+    if ( $_.AssignedLicenses -ne $null) {
+
+if ($_.EmployeeType -like "*terminated*") {
+
+set-mailbox -Identity $($_.UserPrincipalName) -CustomAttribute1 disabled
+
+
+}
+else {
+set-mailbox -Identity
+
+}
+
+}
+}
