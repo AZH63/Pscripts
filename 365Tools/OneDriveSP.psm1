@@ -70,7 +70,7 @@ Function Remove-PeopleList {
         [string]$user,
         [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
         [string[]]$sharers,
-        [parameter(mandatory=$true,HelpMessage="enter in UPN of administrator currently logged in for if permissions are required")]
+        [parameter(mandatory=$true,HelpMessage="enter in displayname (no email at this moment pls) of administrator currently logged in for if permissions are required")]
         [string]$adminUser
     )
 
@@ -88,25 +88,29 @@ Function Remove-PeopleList {
 $urls= $displayNames | % {
         
       Write-Verbose "grabbing URLs"
-        Get-OneDriveURL -DisplayName $_ }
-
+        Get-OneDriveURL -DisplayName $_ 
+    }
+       
     write-verbose "sites grabbed: $urls"
     ForEach ($url in $urls) {
        
-     try { write-verbose "attempting to remove user from with no site admin"
+     try { write-verbose "attempting to remove user from $url with no site admin"
      Remove-SPOUser -site $url -loginname $user -ErrorAction stop
+     write-verbose "success"
+
+
     }
     catch {
         write-verbose "permission issue, granting admin privs of user's personal site to admin"
         Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $true   
     try {
-        write-verbose "admin privs set reattempting user remove"
+        write-verbose "admin privs set reattempting $user removal from $url"
         Remove-SPOUser -site $url -loginname $user -ErrorAction Stop
         write-verbose "change successful, reverting permissions"
         Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false
     }
         catch {
-            write-warning "there was an issue" $Error
+            write-warning "there was an issue: $Error"
             write-verbose "ensuring admin is revoked"
             Set-SPOUser -Site $url -loginname $adminUser  -IsSiteCollectionAdmin $false 
         }
@@ -169,21 +173,7 @@ else {
     Import-Module "PnP.PowerShell" -Verbose
 
 }
-#check for app registration
-#
 
-
-$users= Get-MgBetaUser -All | select OnPremisesImmutableId, OnPremisesSyncEnabled, UserPrincipalName
-
-$users | where { $_.OnPremisesSyncEnabled -ne $null }
-
-$immutable= $users | Where { $_.OnPremisesImmutableId -ne $null }
-
-
-Update-MgBetaUser -userid "ahorton@baldorfood.com" -OnPremisesImmutableId "$null"
-
-Invoke-MgGraphRequest -Method PATCH -Uri "https://graph.microsoft.com/v1.0/Users/{$ahorton}" -Body @{OnPremisesImmutableId = "some-immutable-id"}
-Update-MgBetaUser -userid "ahorton@baldorfood.com" -OnPremisesImmutableId "$null"
 
 
 
@@ -194,7 +184,7 @@ Update-MgBetaUser -userid "ahorton@baldorfood.com" -OnPremisesImmutableId "$null
 Connect-SharePointSpo -domain "1x4bs0" -FQDN "1x4bs0.onmicrosoft.com"
 Get-OneDriveUrl -DisplayName "AdeleV"
 
-Remove-SPOUser -Site https://$domain.sharepoint.com/sites/sc1 -LoginName "leeG"
+Remove-SPOUser -Site https://$domain.sharepoint.com/sites/sc1 -LoginName "leeG" 
 
 
 $paths= $modules | % {
@@ -212,3 +202,5 @@ https://1x4bs0-my.sharepoint.com/personal/leeg_1x4bs0_onmicrosoft_com1/_layouts/
 
 
 Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com" #>
+
+
