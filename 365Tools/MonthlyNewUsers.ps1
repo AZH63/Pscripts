@@ -3,14 +3,14 @@ $audit= [System.Collections.ArrayList]::new()
 Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user'"  | tee-object -variable newuserevents
 
 $newuserevents | % {
-    $check= Get-MgBetaUser -userid $($_.TargetResources.UserPrincipalName) -ErrorAction SilentlyContinue
+   try { $check= Get-MgBetaUser -userid $($_.TargetResources.UserPrincipalName) -ErrorAction Stop } catch { $audit.Remove()}
   [void]$audit.Add([PSCustomObject]@{
     ActivityDateTime = $_.ActivityDateTime
     ActivityDisplayName= $_.ActivityDisplayName
     "Target upn"= $_.TargetResources.UserPrincipalName
     Actor= $_.InitiatedBy.User.UserPrincipalName
     result= $_.Result
-    Type=  ($check.EmployeeId -lt "0"  ) ? "service acct" : "user account"
+    Type=  ($check.EmployeeId -lt "0"  ) ? "service acct" : "user account" 
     
   }) 
 }
