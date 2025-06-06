@@ -208,81 +208,47 @@ write-host " no export, here are the users again: $($FoundBoxes | Format-Table)"
 
 }
 
-Function Remove-MailEnabledMg {
-param (
-[parameter(mandatory)]
-[string[]]$mail
-)
-if ($mail  -notlike "*@*") {
-    $mail= Read-Host "Please enter in an email no quotation marks needed" 
+
+Function Remove-groups {
+   [CmdletBinding()]
+ param (
+    [string[]]$mail
+ )
+
+ forEach ( $m in $mail) {
+$userid= Get-mgBetaUser -UserId $m | select -ExpandProperty Id
+$groups= get-mgBetaUserMemberOf -userid ($m)
+ 
+$groups | % {
+   if ($_.GroupTypes -notlike "*DynamicMembership*") {      
+ write-verbose  " not dynamic $($_.AdditionalProperties.mail) $($_.Id)"
+ try {
+    write-verbose "attempting to remove from $($_.AdditionalProperties.mail)"
+ Remove-DistributionGroupMember -Identity $($_.Id) -Member $($userid) -BypassSecurityGroupManagerCheck -Confirm:$false -ErrorAction Stop 
+
+ }
+catch {
+    write-warning "not mail enabled"
+ Remove-MgBetaGroupMemberByRef -GroupId $($_.Id) -DirectoryObjectId $($userid) -WhatIf
+
+}
+
+   }
+    else {
+       
+  "no can do, dynamic group"
+
     }
-    write-host "user is $mail" 
-     
-$User=Get-MgBetaUser -Filter "UserPrincipalName eq '$mail'"
-
-$GroupIds= (Get-MgBetaUserMemberOf -UserId $($User.Id)).Id
-$Groupinfo= $GroupIds | % { Get-MgBetaGroup -GroupId $_ | Select Mail,GroupTypes,MailEnabled,Id  } ## for some reason can't pull these from memberof
-
-ForEach ($group in $GroupInfo) {
-
-if ($null -ne $group.Mail) {
-
-    if ($group.GroupTypes -cmatch "Unified" -and $group.GroupTypes -notcontains "DynamicMembership") {
-        Write-verbose "$($group.Mail) is a 365 group with types: $($group.GroupTypes)"
-        Remove-MgBetaGroupMemberByRef -GroupId $group.Id -DirectoryObjectId $user.Id
-    } elseif ( $($group.MailEnabled) -eq $true  -and $group.GroupTypes -notcontains "DynamicMembership") {
-        Write-verbose "$($group.Mail) is a mail-enabled security group MESG) with types: $($group.GroupTypes)"
-    } else {
-        Write-verbose "$($group.Mail) does not match any specific conditions."
-    }
-
-
-}
-else {
-    write-host "this group $($group)is not mail enabled"
-  
-  }
-}
-}
-
-Function Remove-MailEnabledAzureAD {
-
-    param (
-        [parameter(mandatory)]
-        [string]$mail
-        )
-     
-        if ($mail  -notlike "*@*") {
-        $mail= Read-Host "Please enter in an email no quotation marks needed" 
-        }
-        write-host "user is $mail" 
-        
-        $userid= (Get-AzureADUser -filter "UserPrincipalName eq '$mail'").ObjectId
-        $Groups=Get-AzureADUserMembership -ObjectId $mail | Select ObjectId, DisplayName, MailEnabled, SecurityEnabled
-
-        ForEach ($group in $Groups) {
-
-         if ($group.MailEnabled -eq $true -and $group.SecurityEnabled -eq $false) {
-          write-host " $($group.DisplayName) is 365"
-          Remove-AzureADGroupMember -ObjectId $($group.ObjectId) -MemberId $userid
-         }
-
-         elseif ($group.MailEnabled -eq $true -and $group.SecurityEnabled -eq $true) {
-
-         write-host " $($group.DisplayName) is mailEnabled"
-         Remove-DistributionGroupMember -identity $($group.ObjectId) -member $mail -Confirm:$false -BypassSecurityGroupManagerCheck
-
-        }
-        else {
-        write-host "$($group.DisplayName): a sec group"
-        Remove-AzureADGroupMember -ObjectID $($group.ObjectId) -member $userid 
-
-        }
-
 
 
 
 }
+ 
+
+
+ }
+
+
 
 }
 
@@ -436,9 +402,9 @@ if ($PSBoundParameters.ContainsKey('removelicense')) {
 }
 
 
+$uri= "https://graph.microsoft.com/v1.0/security/auditLog/queries"
 
-
-
+Invoke-MgGraphRequest -Method GET -uri $uri
 
 
 
@@ -490,3 +456,47 @@ set-mailbox -Identity
 
 }
 }
+
+$users=@("JosuePalaciosHernandez@baldorfood.com","AnaHerrera@baldorfood.com","KeniaMaldonado@baldorfood.com","TzarThompson@baldorfood.com","BertinGodoy@baldorfood.com")
+$users| % {
+    $entrainfo= Get-MgBetaUser -userid $_
+     if ($entrainfo.AssignedLicenses -ne $null){
+
+        $license=Get-MgBetaUserLicenseDetail -userid $($entrainfo.UserPrincipalName)
+        "license found $($entrainfo.UserPrincipalName)"
+                 try {
+                     Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{} -errorAction Stop
+
+                 }
+                 catch {
+                        
+                          
+                Remove-MgBetaGroupMemberByRef -GroupId "5d6b43fc-b376-45dd-a6eb-f1098ea29e87" -DirectoryObjectId $($entrainfo.Id)  
+                          New-MgBetaGroupMember -GroupId "c9cfb034-5c5c-4d3b-88ed-f25cd9765655" -DirectoryObjectId $($entrainfo.Id)     
+
+                        
+                 }
+          
+
+     }
+     else {
+New-MgBetaGroupMember -GroupId "c9cfb034-5c5c-4d3b-88ed-f25cd9765655" -DirectoryObjectId $($entrainfo.Id)     
+
+
+     }
+
+
+}
+
+$users | % { 
+
+Get-MgBetaUserLicenseDetail -userid $_ | select SkuPartNumber, SkuId | tee-object -variable license
+
+if ($license.SkuPartNumber -like "*StandardPack*") {
+"E1"
+
+
+}
+
+}
+
