@@ -220,16 +220,23 @@ $userid= Get-mgBetaUser -UserId $m | select -ExpandProperty Id
 $groups= get-mgBetaUserMemberOf -userid ($m)
  
 $groups | % {
+    $groupid= $_.Id
    if ($_.GroupTypes -notlike "*DynamicMembership*") {      
- write-verbose  " not dynamic $($_.AdditionalProperties.mail) $($_.Id)"
+ write-verbose  " not dynamic $($_.AdditionalProperties.mail) $groupid "
  try {
-    write-verbose "attempting to remove from $($_.AdditionalProperties.mail)"
- Remove-DistributionGroupMember -Identity $($_.Id) -Member $($userid) -BypassSecurityGroupManagerCheck -Confirm:$false -ErrorAction Stop 
+    write-verbose "attempting to remove $($m) from $($_.AdditionalProperties.mail)"
+ Remove-DistributionGroupMember -Identity $($groupid) -Member $($userid) -BypassSecurityGroupManagerCheck -Confirm:$false -ErrorAction Stop 
 
  }
 catch {
-    write-warning "not mail enabled"
- Remove-MgBetaGroupMemberByRef -GroupId $($_.Id) -DirectoryObjectId $($userid) -WhatIf
+    "this is in the pipeline rn $($_)"
+    write-warning "odds are its a 365 or smth $groupid"
+try { Remove-MgBetaGroupMemberByRef -GroupId $($groupid) -DirectoryObjectId $($userid) -ErrorAction Stop }
+
+catch {
+  Remove-UnifiedGroupLinks -identity $($groupid) -LinkType Members -links $($userid) -Confirm:$false
+
+}
 
 }
 
@@ -400,103 +407,3 @@ if ($PSBoundParameters.ContainsKey('removelicense')) {
 
 }
 }
-
-
-$uri= "https://graph.microsoft.com/v1.0/security/auditLog/queries"
-
-Invoke-MgGraphRequest -Method GET -uri $uri
-
-
-
-
-
-
-Get-MgBetaGroupMemberOf
-
-
-
-
-Invoke-MgGraphRequest -Method GET -uri $uri | ConvertTo-Json
-
-$user
-ForEach($use in $user) {
-
-$uri = "https://graph.microsoft.com/v1.0/users/$((Get-MgBetaUser -userid "yoohooo@1x4bs0.onmicrosoft.com").Id)/memberOf"
-invoke-MgGraphRequest -Method GET $uri $uri | convert-ToJson
-
-
-
-}
-<# Measure-Command {Get-MgUserMemberOf -UserId $User.Id | Select Id }
-
-Measure-Command { (Get-MgUserMemberOf -UserId $user.id).id } (winner)
-
-measure-command {$GroupIds | % { Get-MgGroup -GroupId $_ | Select Mail,GroupTypes  } } (slight winner)
-measure-command { $GroupIds | % { Get-MgGroup -GroupId $_   } }
-
-
-
-#>
-
-Get-MgBetaUser -All | Tee-Object -Variable users  
-
-$users | % {
-    if ( $_.AssignedLicenses -ne $null) {
-
-if ($_.EmployeeType -like "*terminated*") {
-
-set-mailbox -Identity $($_.UserPrincipalName) -CustomAttribute1 disabled
-
-
-}
-else {
-set-mailbox -Identity
-
-}
-
-}
-}
-
-$users=@("JosuePalaciosHernandez@baldorfood.com","AnaHerrera@baldorfood.com","KeniaMaldonado@baldorfood.com","TzarThompson@baldorfood.com","BertinGodoy@baldorfood.com")
-$users| % {
-    $entrainfo= Get-MgBetaUser -userid $_
-     if ($entrainfo.AssignedLicenses -ne $null){
-
-        $license=Get-MgBetaUserLicenseDetail -userid $($entrainfo.UserPrincipalName)
-        "license found $($entrainfo.UserPrincipalName)"
-                 try {
-                     Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{} -errorAction Stop
-
-                 }
-                 catch {
-                        
-                          
-                Remove-MgBetaGroupMemberByRef -GroupId "5d6b43fc-b376-45dd-a6eb-f1098ea29e87" -DirectoryObjectId $($entrainfo.Id)  
-                          New-MgBetaGroupMember -GroupId "c9cfb034-5c5c-4d3b-88ed-f25cd9765655" -DirectoryObjectId $($entrainfo.Id)     
-
-                        
-                 }
-          
-
-     }
-     else {
-New-MgBetaGroupMember -GroupId "c9cfb034-5c5c-4d3b-88ed-f25cd9765655" -DirectoryObjectId $($entrainfo.Id)     
-
-
-     }
-
-
-}
-
-$users | % { 
-
-Get-MgBetaUserLicenseDetail -userid $_ | select SkuPartNumber, SkuId | tee-object -variable license
-
-if ($license.SkuPartNumber -like "*StandardPack*") {
-"E1"
-
-
-}
-
-}
-
