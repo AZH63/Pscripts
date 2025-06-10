@@ -1,9 +1,12 @@
 $audit= [System.Collections.ArrayList]::new()
-
+$error.Clear()
 Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user'"  | tee-object -variable newuserevents
 
 $newuserevents | % {
-   try { $check= Get-MgBetaUser -userid $($_.TargetResources.UserPrincipalName) -ErrorAction Stop } catch { $audit.Remove()}
+
+   try { 
+    " checking existance of $($_.TargetResources.UserPrincipalName)"
+    $check= Get-MgBetaUser -userid $($_.TargetResources.UserPrincipalName) -ErrorAction SilentlyContinue } catch { }
   [void]$audit.Add([PSCustomObject]@{
     ActivityDateTime = $_.ActivityDateTime
     ActivityDisplayName= $_.ActivityDisplayName
@@ -16,3 +19,5 @@ $newuserevents | % {
 }
 
 $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
+
+
