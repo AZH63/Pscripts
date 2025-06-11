@@ -61,3 +61,16 @@ $match=
 
 }
 
+function Get-NewUsers {
+    [CmdletBinding()]
+   param (
+     [validateSet("january","february","march","april","may","june","july","august","september","october","november","december")]
+     [string]$month
+   )
+   
+   Measure-Command{ $Param= $PSCmdlet.MyInvocation.MyCommand.Parameters['month']
+   $monthset= $param.Attributes.ValidValues 
+     } 
+    Measure-Command {$yurr=@("january","february","march","april","may","june","july","august","september","october","november","december")}
+   
+   }

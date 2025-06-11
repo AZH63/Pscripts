@@ -1,6 +1,6 @@
 $audit= [System.Collections.ArrayList]::new()
 $error.Clear()
-Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user'"  | tee-object -variable newuserevents
+Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user' and ActivityDateTime ge  "  | tee-object -variable newuserevents
 
 $newuserevents | % {
 
@@ -21,3 +21,25 @@ $newuserevents | % {
 $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
 
 
+$month= (Get-Date).Month
+
+
+
+(Get-Date).Year + $() + (Get-Date).Day
+
+
+
+function Get-NewUsers {
+  [CmdletBinding()]
+ param (
+   [validateSet("january","february","march","april","may","june","july","august","september","october","november","december",IgnoreCase=$true)]
+   [string]$month
+ )
+ $month= $month.ToLower()
+ $months=$PSCmdlet.MyInvocation.MyCommand.Parameters["month"].Attributes.ValidValues
+$monthnumber= $months.IndexOf("$month") + 1
+Write-Verbose "$monthnumber"
+     
+}
+
+$formatted = Get-Date -Year $year -Month $m -Day $day -Format 'MM/dd/yy'
