@@ -144,21 +144,6 @@ $mb
 }
 
 
-Function Disable-SharedMb {
-
-    $mbs= get-mailbox -filter " RecipientTypeDetails -eq 'SharedMailbox' " | Select -ExpandProperty  PrimarySmtpAddress
-       write-verbose "shared mbs found: $mbs "
-
-    $userobj= $mbs | % { Get-MgBetaUser -u
-        serid $($_) | select AccountEnabled,Id,UserPrincipalName }
-   Write-Verbose "user obj found in entra, $userobj"
-    $bad= $userobj | Where AccountEnabled -eq $true
-    write-verbose "these mbs are enabled: $bad"
-
-
-     $param=@{AccountEnabled= $false}
-    $bad | % {update-mgbetauser -userid $($_.id) -BodyParameter $param}
-    }
 
 Function Search-MailboxesExport{
 <#
