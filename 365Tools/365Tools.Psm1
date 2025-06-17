@@ -145,29 +145,6 @@ $mb
 
 
 
-Function Search-MailboxesExport{
-<#
- .SYNOPSIS
- search mailboxes, enter as argument the words the mailbox must contain ex. "testAz", "onmicrosoft.com", function wil
-#>
-param (
-    [string] $Searchstr
-)
-write-host "searching for users"
-$FoundBoxes= Get-Mailbox | Where-Object { $_.PrimarySMTPaddress -like "*$Searchstr*" -and $_.RecipientType -eq "UserMailbox" -and $_.DisplayName -notlike "*DiscoverySearchMailbox*"} | Select PrimarySMTPaddress, displayName
-Write-host " these users were found $($FoundBoxes.DisplayName) , csv will be sent to your profile's download folder"
-$choice= Read-host "Do you want to export the list of users y/n"
-if ($choice -eq "y") {
-    $FoundBoxes | Export-Csv -path $env:UserProfile\Downloads\FoundBoxes.csv   -NoTypeInformation
-}
-else {
-write-host " no export, here are the users again: $($FoundBoxes | Format-Table)"
-
-}
-
-
-
-}
 
  Function Update-Primarysmtp {
     $choice=  read-host "choose a number choice: `n 1. enter users yourself or 2. run a search, generate csv and update adds 3. just search and grab CSV"

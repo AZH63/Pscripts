@@ -194,7 +194,6 @@ $paths= $modules | % {
 
 }
 
-$offender="C:\Users\YAWW\OneDrive\Documents\PowerShell\Modules;"
 
 $Env:PSModulePath.replace("$offender","")
 

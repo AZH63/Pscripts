@@ -228,7 +228,7 @@ $Results= $Groups | % {
 return $Results
 
 
- }
+ } #wip
 
  Function Get-TraceNew{ 
     # messagetrace not rlly wkg too nicely in either vers there has to be a better way
@@ -272,6 +272,6 @@ process {
     
     end { $GroupsTrace
     }
- }
+ } # wip
 
  

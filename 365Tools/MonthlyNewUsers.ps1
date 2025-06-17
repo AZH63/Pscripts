@@ -1,6 +1,6 @@
 $audit= [System.Collections.ArrayList]::new()
 $error.Clear()
-Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user' and ActivityDateTime ge  "  | tee-object -variable newuserevents
+Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Add user' "  | tee-object -variable newuserevents 
 
 $newuserevents | % {
 
@@ -17,6 +17,24 @@ $newuserevents | % {
     
   }) 
 }
+
+$json = $audit | ConvertTo-Json -Depth 3 
+
+python -c "import pandas as pd"
+python -c "import json"
+python -c "data = json.loads(json_str)"
+python -c "df = pd.json_normalize(data)"
+
+
+
+
+
+
+
+
+
+
+
 
 $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
 
