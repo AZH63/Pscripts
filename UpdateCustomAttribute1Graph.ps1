@@ -19,6 +19,7 @@ $termed= $users | Where { $_.EmployeeType -like "*Terminated*"}
 $termed | % {
    try { 
   Set-mailbox -Identity $($_.Mail) -CustomAttribute1 "disabled" -ErrorAction Stop
+  write-host"attribute set to disabled"
    }
    catch {
   write-warning "no mailbox for user $($_.Mail)"
@@ -28,6 +29,7 @@ $active= $users | Where { $_.EmployeeType -like "*Active*"}
 $active | % {
   try {
   Set-Mailbox -identity $($_.Mail) -CustomAttribute1 "$null" -ErrorAction Stop
+  write-host "attribute set to null"
   }
   catch {
 write-warning "no mailbox for user $($_.Mail)"
