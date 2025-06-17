@@ -18,32 +18,9 @@ $newuserevents | % {
   }) 
 }
 
-$json = $audit | ConvertTo-Json -Depth 3 
-
-python -c "import pandas as pd"
-python -c "import json"
-python -c "data = json.loads(json_str)"
-python -c "df = pd.json_normalize(data)"
-
-
-
-
-
-
-
-
-
-
-
-
 $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
 
 
-$month= (Get-Date).Month
-
-
-
-(Get-Date).Year + $() + (Get-Date).Day
 
 
 
