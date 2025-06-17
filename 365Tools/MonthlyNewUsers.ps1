@@ -27,14 +27,16 @@ $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
 function Get-NewUsers {
   [CmdletBinding()]
  param (
-   [validateSet("january","february","march","april","may","june","july","august","september","october","november","december",IgnoreCase=$true)]
-   [string]$month
+   [Param]
+   [string]$startdate,
+   [string]$endDate="$(get-date -format "MM/dd/yy")"
+   
  )
- $month= $month.ToLower()
- $months=$PSCmdlet.MyInvocation.MyCommand.Parameters["month"].Attributes.ValidValues
-$monthnumber= $months.IndexOf("$month") + 1
-Write-Verbose "$monthnumber"
+ $startDateTime=[datetime]::ParseExact($startdate, "MM/dd/yy", $null)
+ $startClean= $startClean.ToString('MM/dd/yy')
+ 
      
 }
 
-$formatted = Get-Date -Year $year -Month $m -Day $day -Format 'MM/dd/yy'
+# $formatted = Get-Date -Year $year -Month $m -Day $day -Format 'MM/dd/yy'
+# Find all users deleted- 
