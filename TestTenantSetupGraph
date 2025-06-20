@@ -1,3 +1,7 @@
+$code=@("Salary","Hourly")
+$unit= @("Administrative", "Warehouse")
+$departments=@( "IT", "Marketing", "Accounting","Sales", "Engineering","Merchandising")
+# change personal data to a switch inside of create users
 Function Create-Groups {
 
    for ( $i=1;$i -le 3;$i++) {
@@ -121,43 +125,14 @@ $range| % {
 
 }
 
-Create-Users
 
 
 
-$tenant=read-host "enter tenant name (after the @ including the TLD)"
-[int]$UserCount= read-host "how many users?"
-
-[int]$startingpt= Read-Host "what number to start from?"
- $startingpt..$UserCount| ForEach-Object { $params= @{
- accountEnabled= $true
- displayName= "user$_"
- mailNickName= "user$_"
- userPrincipalName = "user$_@$tenant"
-PasswordProfile= @{
-    forceChangePasswordNextSignIn = $true   
-}
-}
-New-MgUser -BodyParameter $params
-Update-MgBetaUser -userId "user$_@$tenant"   -EmployeeId $_
-}
-
-
-#find the midpt
-$midpoint= [math]::Ceiling($EmployeesAdded.Count /2)
-# split array in half using midpoint
-$enabledUsers=$EmployeesAdded[0..($midpoint -1)]
-$disabledUsers=$EmployeesAdded[$midpoint..($EmployeesAdded.Count - 1)]
-$disabledUsers | ForEach-Object {
-Write-Host " Disabling user$_@$tenant"
-Update-MgBetaUser -UserId "user$_@$tenant" -AccountEnabled $false
-
-}
 
 Create-Groups
 #license
 #create test desk pick a user to assign
-Get-Random -InputObject ((Get-MgUser).Id)
+Get-Random -InputObject ((Get-MgUser -filter ).Id)
 
 $params=@{
     description = "Group for Helpdesk privs"

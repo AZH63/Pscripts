@@ -18,6 +18,10 @@ $newuserevents | % {
   }) 
 }
 
+
+
+
+
 $audit | export-csv -path $env:UserProfile\Downloads\auditmay.csv
 
 
@@ -38,5 +42,6 @@ function Get-NewUsers {
      
 }
 
+
 # $formatted = Get-Date -Year $year -Month $m -Day $day -Format 'MM/dd/yy'
-# Find all users deleted- 
+=
