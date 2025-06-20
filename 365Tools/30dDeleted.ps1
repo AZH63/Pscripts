@@ -68,12 +68,16 @@ Function Send-Mail {
 
 $audit= [System.Collections.ArrayList]::new()
 Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Update user' "  | tee-object -variable updates
-$termedactions= $updates | Where { ($_.InitiatedBy.App.DisplayName -eq "AzureAD") -and ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
+ # $termedactions= $updates | Where { ($_.InitiatedBy.App.DisplayName -eq "AzureAD") -and ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
 #$appChanges[1].TargetResources.ModifiedProperties
-$30dayselapsed= $termedactions | Where { $termedactions.ActivityDateTime -lt $(Get-Date).AddDays(-30) }
+ $termedactions= $updates | Where { ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
 
+$30dayselapsed= $termedactions | Where { $termedactions.ActivityDateTime -lt (Get-Date).AddDays(-30) }
+
+$affected= $30dayselapsed.TargetResources.UserPrincipalName
 $30dayselapsed | % {
-
+    #check SharedMb
+     Get-Mailbox -identity $($_.TargetResources.UserPrincipalName) | Select PrimarySMTPaddress,RecipientTypeDetails
 
     
 }
