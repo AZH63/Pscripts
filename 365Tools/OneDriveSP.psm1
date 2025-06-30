@@ -194,6 +194,7 @@ $paths= $modules | % {
 
 }
 
+$offender="C:\Users\YAWW\OneDrive\Documents\PowerShell\Modules;"
 
 $Env:PSModulePath.replace("$offender","")
 
@@ -201,5 +202,7 @@ https://1x4bs0-my.sharepoint.com/personal/leeg_1x4bs0_onmicrosoft_com1/_layouts/
 
 
 Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com" #>
+
+
 
 
