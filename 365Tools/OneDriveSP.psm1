@@ -1,13 +1,7 @@
 
-<#
-.Synopsis
-User returns after many moons and no matter how many times they try cannot access OneDrive files shared with them from employees who worked with a user
-with a coincadentally similar name...
-.Description
-Removing cached GUID from select personal sharepoint site
+#Requires -Modules "Microsoft.Online.SharePoint.PowerShell"
+#Requires -version 5.1
 
-
-#>
 Function Connect-SharePointSpo {
 param (
     [parameter(HelpMessage="name of domain")]
@@ -47,8 +41,7 @@ try {
 
 }
 
-Function Get-OneDriveURL
-{
+Function Get-OneDriveURL {
 
     param (
    [string]$DisplayName=" "
@@ -71,7 +64,7 @@ Function Remove-PeopleList {
         [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
         [string[]]$sharers,
         [parameter(mandatory=$true,HelpMessage="enter in displayname (no email at this moment pls) of administrator currently logged in for if permissions are required")]
-        [string]$adminUser
+        [string]$adminUser="yoohooo"
     )
 
     $displayNames= $sharers | %{
@@ -123,14 +116,6 @@ $urls= $displayNames | % {
     
 }
 
-
-
-# Get the person's site/OneDriveURL
-#set yourself as admin of the personal site-- Set-SPOUser -Site $lee -loginname "yoohooo@1x4bs0.onmicrosoft.com"  -IsSiteCollectionAdmin $true
-#remove affected user: Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com"
-#This will remove the person from the peoplelist
-#remove yourself as admin
-
 Function Get-OneDriveURLGraph {
   param (
     [string]$upn,
@@ -153,26 +138,6 @@ Function Get-OneDriveURLGraph {
 }
 
 
-Try {
-    Connect-MgGraph -Scopes "Directory.ReadWrite.All", "Sites.ReadWrite.All", "Files.ReadWrite.All" -ErrorAction Stop
-
-}
-catch {
-   
-
-}
-
-
-
-$installed=Get-Module -ListAvailable -name "PnP.PowerShell"
-if (!$installed) {
-Install-Module -Name "PnP.PowerShell" -Verbose
-Import-Module "PnP.PowerShell" -Verbose
-}
-else {
-    Import-Module "PnP.PowerShell" -Verbose
-
-}
 
 
 
@@ -180,28 +145,7 @@ else {
 
 
 
-<#
-Connect-SharePointSpo -domain "1x4bs0" -FQDN "1x4bs0.onmicrosoft.com"
-Get-OneDriveUrl -DisplayName "AdeleV"
 
-Remove-SPOUser -Site https://$domain.sharepoint.com/sites/sc1 -LoginName "leeG" 
-
-
-$paths= $modules | % {
-
-    $string= $_
-    $string.Insert(-1,';')
-
-}
-
-$offender="C:\Users\YAWW\OneDrive\Documents\PowerShell\Modules;"
-
-$Env:PSModulePath.replace("$offender","")
-
-https://1x4bs0-my.sharepoint.com/personal/leeg_1x4bs0_onmicrosoft_com1/_layouts/15/people.aspx?MembershipGroupId=0
-
-
-Remove-SpOUser -Site $lee -loginName "DiegoS@1x4bs0.onmicrosoft.com" #>
 
 
 

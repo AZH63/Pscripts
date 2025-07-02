@@ -174,6 +174,7 @@ $mb
 Function Remove-groups {
    [CmdletBinding()]
  param (
+    [parameter(mandatory=$true)]
     [string[]]$mail
  )
 
@@ -332,6 +333,7 @@ foreach ( $u in $upn) {
 function convert-users {
     [CmdletBinding()] 
 param (
+    [parameter(mandatory=$true)]
     [string[]]$upn,
     [switch]$removelicense,
     [switch]$service
@@ -360,12 +362,19 @@ if ($PSBoundParameters.ContainsKey('removelicense')) {
 
   }
   else {
+    try {
   write-verbose "removing license found: $license"
-  Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{}
+  Set-MgBetaUserLicense -userid $_ -RemoveLicenses @($license) -AddLicenses @{} -ErrorAction Stop
+
   }
-
+catch {
+write-warning "probably a license group" $error
+}
+}
 }
 
 
 }
 }
+
+Set-DynamicDistributionGroup -Name “All_Sales” -RecipientFilter "(RecipientTypeDetails -eq 'UserMailbox') -and ((Department -like 'Sales*') -or (Department -in ["780","862","300","912"] ) )  -and (-not(CustomAttribute1 -eq 'Disabled'))"
