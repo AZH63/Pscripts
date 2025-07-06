@@ -1,4 +1,4 @@
-DeletedUsers 
+
 Function Send-Mail {
 
     param (
@@ -64,22 +64,53 @@ Function Send-Mail {
    Send-MgUserMail -UserId $sendAdd -BodyParameter $mailbody
     }
        
-
-
+Function Get-DeletedLast {
+  [CmdletBinding()]
+  
+param(
+  [parameter(mandatory=$true)]
+    [int]$number
+  )
+  write-verbose "days chosen= $($PSBoundParameters['number'])"
 $audit= [System.Collections.ArrayList]::new()
-Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Update user' "  | tee-object -variable updates
+$updates= Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 'Update user' "  
  # $termedactions= $updates | Where { ($_.InitiatedBy.App.DisplayName -eq "AzureAD") -and ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
 #$appChanges[1].TargetResources.ModifiedProperties
  $termedactions= $updates | Where { ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
 
-$30dayselapsed= $termedactions | Where { $termedactions.ActivityDateTime -lt (Get-Date).AddDays(-30) }
+$dayselapsed=$termedactions | Where { $_.ActivityDateTime -lt (Get-Date).AddDays(-($($PSBoundParameters['number'])))}
 
-$affected= $30dayselapsed.TargetResources.UserPrincipalName
-$30dayselapsed | % {
-    #check SharedMb
-     Get-Mailbox -identity $($_.TargetResources.UserPrincipalName) | Select PrimarySMTPaddress,RecipientTypeDetails
+$affected= $dayselapsed.TargetResources
 
-    
+$affected.UserPrincipalName
+
+
 }
 
 
+
+Get-DeletedLast -number 10 | tee-object -variable termed10d
+$termed10d | % {
+ $user=Get-MgBetaUser -userid $_ 
+
+ If ($user.EmployeeType -like "*Salary*") {
+Send-mail
+
+ }
+ else {
+
+
+
+ }
+
+}
+
+
+
+
+
+
+1..6 | % { $all | get-random } | tee-object -variable names
+$types=@("Terminated Salary Administrative","Terminated Salary Warehouse","Terminated Hourly Administrative", "Terminated Hourly Warehouse" )
+$names | % { $params=@{AccountEnabled=$false;EmployeeType=$($types | Get-random)}
+Update-MgBetaUser -userid $($_.UserPrincipalName) -bodyparam $params } 
