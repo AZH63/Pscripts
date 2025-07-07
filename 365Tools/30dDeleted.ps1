@@ -90,16 +90,21 @@ $affected.UserPrincipalName
 
 
 Get-DeletedLast -number 10 | tee-object -variable termed10d
+$fatherlessusers=
 $termed10d | % {
  $user=Get-MgBetaUser -userid $_ 
 
  If ($user.EmployeeType -like "*Salary*") {
-Send-mail
+  get-mgbetausermanager -userid $($user.UserPrincipalName) 
+
+  #get mg-usermanager returns id try endpoint
+
+Send-mail -text "Hello, this person $($user.Name) will be deleted" -subject "Losing access to shared mailbox" -sendAdd $((Get-MgContext).Account) -recipients $((get-mgbetausermanager -userid $($user.UserPrincipalName)).AdditionalProperties.userPrincipalName )
 
  }
  else {
 
-
+    Write-Host "$($user.UserPrincipalName) to be deleted"
 
  }
 
