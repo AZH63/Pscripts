@@ -90,19 +90,22 @@ $affected.UserPrincipalName
 
 
 Get-DeletedLast -number 10 | tee-object -variable termed10d
-$fatherlessusers= 
-
+$fatherlessusers= [System.Collections.ArrayList]::new()
 $termed10d | % {
  $user=Get-MgBetaUser -userid $_ 
 
  If ($user.EmployeeType -like "*Salary*") {
-  get-mgbetausermanager -userid $($user.UserPrincipalName) 
-
-  #get mg-usermanager returns id try endpoint
-
-Send-mail -text "Hello, this person $($user.Name) will be deleted" -subject "Losing access to shared mailbox" -sendAdd $((Get-MgContext).Account) -recipients $((get-mgbetausermanager -userid $($user.UserPrincipalName)).AdditionalProperties.userPrincipalName )
+  try {
+  $manager=get-mgbetausermanager -userid $($user.UserPrincipalName)  -ErrorAction stop
+  write-verbose "sending message to $($manager.AdditionalProperties.userPrincipalName) "
+Send-mail -text "Hello, this person $($user.UserPrincipalName) will be deleted" -subject "Losing access to shared mailbox" -sendAdd $((Get-MgContext).Account) -recipients $($manager.AdditionalProperties.userPrincipalName)
 
  }
+ catch {
+write-warning "no manager adding to list"
+$fatherlessusers.Add($($user.UserPrincipalName) )
+ }
+}
  else {
 
     Write-Host "$($user.UserPrincipalName) to be deleted"
@@ -110,6 +113,7 @@ Send-mail -text "Hello, this person $($user.Name) will be deleted" -subject "Los
  }
 
 }
+
 
 
 
