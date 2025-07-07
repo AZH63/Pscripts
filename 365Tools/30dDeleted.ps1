@@ -90,7 +90,8 @@ $affected.UserPrincipalName
 
 
 Get-DeletedLast -number 10 | tee-object -variable termed10d
-$fatherlessusers=
+$fatherlessusers= 
+
 $termed10d | % {
  $user=Get-MgBetaUser -userid $_ 
 
