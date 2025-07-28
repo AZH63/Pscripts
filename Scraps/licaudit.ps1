@@ -100,3 +100,13 @@ $exceptions | % {
 
 
 
+
+ 
+$bostonisr=@("PDivas@baldorfood.com",
+"WAndrade@baldorfood.com",
+"JThibeau@baldorfood.com",
+"MMartinez@baldorfood.com",
+"JaPerez@baldorfood.com",
+"RAndrade@baldorfood.com",
+"MCora@baldorfood.com")
+
