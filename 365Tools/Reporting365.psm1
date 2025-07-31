@@ -16,46 +16,63 @@ Function Get-GroupInfoExport {
   #>
       [CmdletBinding()]
       param (
-          [Parameter(Mandatory, ValueFromPipeline=$true)]
-          [string[]]$Searchstr
+          [Parameter(ValueFromPipeline=$true)]
+          [string[]]$searchstr,
+          [switch]$messages
+          
+
       )
       
       Begin {
           Write-Verbose "Initializing variables and validating input..."
-          $Results = [System.Collections.ArrayList]::new()
+          $results = [System.Collections.ArrayList]::new()
 
-          $CSVName = Read-Host "Enter the name for the resulting CSV file (without extension)"
+          $csvname = Read-Host "Enter the name for the resulting CSV file (without extension)"
       }
   
       Process {
-          foreach ($Search in $Searchstr) {
-              Write-Verbose "Searching for groups with search string: $Search"
-              
-              $Groups = Get-DistributionGroup -ResultSize Unlimited  -filter " DisplayName -like '*$Search*'"
-              
-              if ($Groups) {
-                  Write-Host "Groups found for '$Search': $($Groups)" -ForegroundColor Green
+        if ( $null -eq $searchstr){
+            write-warning "searching for all"
+            $groups= Get-DistributionGroup -ResultSize unlimited
+         
+         
+         }
+         else {
+          $groups= $searchstr | % {
+              Get-distributiongroup -filter "displayName -like '*$_*'" 
+         
+         
+           }
+         
+         }
+              if ($null -ne $groups ) {
+                  Write-verbose "Groups found for '$searchstr': $($groups)" 
+                   
+                  foreach ($group in $groups) {
+                      Write-Verbose "Processing group: $($group.DisplayName)"
+                      
+                      if ($PSBoundParameters.ContainsKey('messages') ){
+                        $trace= get-messagetracev2 -RecipientAddress $_ -StartDate (( get-date).AddDays(-10)) -EndDate (Get-date) -ResultSize 10
+
+                      }
+                    $members=Get-distributiongroupmember -Identity $group | select -ExpandProperty PrimarySmtpAddress
                   
-                  foreach ($Group in $Groups) {
-                      Write-Verbose "Processing group: $($Group.DisplayName)"
-                      
-                      $Members = Get-DistributionGroupMember -Identity $Group.Name | Select-Object -ExpandProperty PrimarySmtpAddress
-                      
                       $Results.Add( [PSCustomObject]@{
-                          GroupName    = $Group.PrimarySmtpAddress
-                          GroupTypes   = $Group.GroupType
-                          Hidden       = $Group.HiddenFromAddressListsEnabled
-                          CreatedDate  = $Group.WhenCreated
-                          LastChanged  = $Group.WhenChanged
-                          ManagedBy    = ($Group.ManagedBy | ForEach-Object { $_.DisplayName }) -join ', '
-                          Members      = $Members -join ', '
-                      })
+                          GroupName    = $group.PrimarySmtpAddress
+                          GroupTypes   = $group.GroupType
+                          Hidden       = $group.HiddenFromAddressListsEnabled
+                          CreatedDate  = $group.WhenCreated
+                          LastChanged  = $group.WhenChanged
+                          ManagedBy    = ($group.ManagedBy | ForEach-Object { $_.DisplayName }) -join ', '
+                          Members      = $members -join ', '
+                          messageslast10= ($trace)? $trace.Count : "trace option not selected"
+                          
+                      }) | Out-Null
                   }
               } else {
-                  Write-Host "No groups found for '$Search'." -ForegroundColor Yellow
-              }
+                  Write-warning "No groups found for '$Search'."
           }
-      }
+        }
   
       End {
           if ($Results) {
@@ -64,10 +81,15 @@ Function Get-GroupInfoExport {
               $Results | Export-Csv -Path $OutputPath -NoTypeInformation
               Start-Process -FilePath $OutputPath
           } else {
-              Write-Host "No results to export." -ForegroundColor Red
+              Write-Host "No results to export." 
           }
       }
-  }
+    }
+    
+
+
+
+  
   
 
 Function get-Unusedmbs {
@@ -195,6 +217,9 @@ Function get-Unusedmbs {
      
   }
   }
+
+
+
   
   
   
@@ -202,76 +227,3 @@ Function get-Unusedmbs {
 
 
 
-Function Get-TraceOld { 
-    
-    param (
-        [Parameter(ValueFromPipeline = $true)]
-        [object[]]$Groups
-        )
-
-$Results= $Groups | % {
-    $PrimarySmtpAddress = $_.PrimarySmtpAddress
-  try { $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
-  }
-  catch {
-            
-    $trace=Get-MessageTrace -RecipientAddress $_ -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) 
-}
-  }
-     [PSCustomObject]@{
-       TraceFor = $PrimarySmtpAddress
-        received= $trace.received
-        SenderAddress= $trace.SenderAddress
-        
-    
-}
-return $Results
-
-
- } #wip
-
- Function Get-TraceNew{ 
-    # messagetrace not rlly wkg too nicely in either vers there has to be a better way
-    param (
-        [parameter(Mandatory, ValueFromPipeline=$true)]
-        
-        [string[]]$Groups
-        )
-begin {
-    $GroupsTrace=[System.Collections.Generic.List[object]]::new()
-   
-}
-process {
-    try {
-        try { $trace=Get-MessageTrace -RecipientAddress $($_.PrimarySmtpAddress) -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -Verbose
-           Start-Sleep -Milliseconds 500 
-             $GroupsTrace.Add([PSCustomObject]@{
-               TraceFor = $Groups
-               received= $trace.received
-               SenderAddress= $trace.SenderAddress
-           }) 
-        }
-        catch {
-            $trace=Get-MessageTrace -RecipientAddress $_ -StartDate (Get-Date).AddDays(-7) -EndDate (Get-Date) -Verbose
-            Start-Sleep -Milliseconds 500  
-            $GroupsTrace.Add([PSCustomObject]@{
-                TraceFor = $Groups
-                received= $trace.received
-                SenderAddress= $trace.SenderAddress
-                    })
-           }
-        }
-           catch {
-             Write-Warning "dunno" 
-      
-    }
-  
-   
-    }
-
-    
-    end { $GroupsTrace
-    }
- } # wip
-
- 
