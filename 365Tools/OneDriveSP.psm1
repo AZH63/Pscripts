@@ -137,9 +137,17 @@ Function Get-OneDriveURLGraph {
 
 }
 
+$sites=Get-SPOSite -Limit All
 
+$days=180
+$sites | Where { $_.LastContentModifiedDate -gt ((Get-Date).AddDays(-180)) } | Select Name, Owner, ResourceQuota
 
+#Site recycle bin ( deleted sites)
+#get-spodeletedsite
 
+# how does site recycle bin affect storage
+# site collection recycle bin
+# compliance policies for sharepoint storage
 
 
 

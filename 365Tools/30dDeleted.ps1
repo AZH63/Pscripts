@@ -64,7 +64,7 @@ Function Send-Mail {
    Send-MgUserMail -UserId $sendAdd -BodyParameter $mailbody
     }
        
-Function Get-DeletedLast {
+function Get-DeletedLast {
   [CmdletBinding()]
   
 param(
@@ -78,26 +78,33 @@ $updates= Get-MgBetaAuditLogDirectoryAudit -All -filter "ActivityDisplayName eq 
 #$appChanges[1].TargetResources.ModifiedProperties
  $termedactions= $updates | Where { ($_.TargetResources.ModifiedProperties.NewValue -like "*Terminated*") }
 
-$dayselapsed=$termedactions | Where { $_.ActivityDateTime -lt (Get-Date).AddDays(-($($PSBoundParameters['number'])))}
-
-$affected= $dayselapsed.TargetResources
-
-$affected.UserPrincipalName
+$dayselapsed=$termedactions | Where { $_.ActivityDateTime -le (Get-Date).AddDays(-($($PSBoundParameters['number'])))}
 
 
+<#$dayselapsed | % { [PSCustomObject]@{
+   upn = $_.TargetResources.UserPrincipalName
+   dateTime= $_.ActivityDateTime
+   ModifiedProperties= $_.TargetResources.ModifiedProperties
 }
+   #>
+   $dayselapsed
+}
+
+
+
+
 
 
 
 Get-DeletedLast -number 10 | tee-object -variable termed10d
 $fatherlessusers= [System.Collections.ArrayList]::new()
 $termed10d | % {
- $user=Get-MgBetaUser -userid $_ 
+ $user=Get-MgBetaUser -userid $_.TargetResources.UserPrincipalName 
 
  If ($user.EmployeeType -like "*Salary*") {
   try {
   $manager=get-mgbetausermanager -userid $($user.UserPrincipalName)  -ErrorAction stop
-  write-verbose "sending message to $($manager.AdditionalProperties.userPrincipalName) "
+  write-host "sending message to $($manager.AdditionalProperties.userPrincipalName) "
 Send-mail -text "Hello, this person $($user.UserPrincipalName) will be deleted" -subject "Losing access to shared mailbox" -sendAdd $((Get-MgContext).Account) -recipients $($manager.AdditionalProperties.userPrincipalName)
 
  }
@@ -124,3 +131,4 @@ $fatherlessusers.Add($($user.UserPrincipalName) )
 $types=@("Terminated Salary Administrative","Terminated Salary Warehouse","Terminated Hourly Administrative", "Terminated Hourly Warehouse" )
 $names | % { $params=@{AccountEnabled=$false;EmployeeType=$($types | Get-random)}
 Update-MgBetaUser -userid $($_.UserPrincipalName) -bodyparam $params } 
+
