@@ -64,7 +64,7 @@ Function Send-Mail {
    Send-MgUserMail -UserId $sendAdd -BodyParameter $mailbody
     }
        
-function Get-DeletedLast {
+function Get-Terminated {
   [CmdletBinding()]
   
 param(
@@ -96,8 +96,8 @@ $dayselapsed=$termedactions | Where { $_.ActivityDateTime -le (Get-Date).AddDays
 
 
 
-Get-DeletedLast -number 10 | tee-object -variable termed10d
-$fatherlessusers= [System.Collections.ArrayList]::new()
+Get-Terminated -number 10 | tee-object -variable termed10d
+$nomanagers= [System.Collections.ArrayList]::new()
 $termed10d | % {
  $user=Get-MgBetaUser -userid $_.TargetResources.UserPrincipalName 
 
@@ -110,7 +110,7 @@ Send-mail -text "Hello, this person $($user.UserPrincipalName) will be deleted" 
  }
  catch {
 write-warning "no manager adding to list"
-$fatherlessusers.Add($($user.UserPrincipalName) )
+$nomanagers.Add($($user.UserPrincipalName) ) | Out-Null
  }
 }
  else {
