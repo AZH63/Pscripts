@@ -37,7 +37,7 @@ site=Connect-PnPOnline -URL 1x4bs0.sharepoint.com  #mainsite
 Function Connect-PnP {
 param(
     $siteurl="https://1x4bs0.sharepoint.com",
-    $clientId=$env:PnP_Client_Id
+    $clientId=$env:PnP_Client_Id_lab
 
 )
 Connect-PnPOnline -url $siteurl -Interactive -clientId $clientId
@@ -67,9 +67,27 @@ function get-onedrivepnp {
 function get-pnpinventory { 
     
     param (
-        $documentlibrary="/Documents"
+        $documentlibrary="/Documents",
+        [string]$clientId=$env:PnP_Client_Id_lab,
+        [switch]$siteurl,
+        [switch]$groupname,
+        [switch]$upn
     )
-    connect-PnP -siteurl (Get-OneDrivepnp -upn "alexw@1x4bs0.onmicrosoft.com")
+    switch ($PSBoundParameters.Keys){
+
+$siteurl{
+ Connect-PnPOnline -url $siteurl -Interactive -ClientId $clientId
+}
+$groupname{
+ Get-PnPGroup -Identity $groupname 
+}
+$upn{
+
+}
+
+
+
+    }
 
 $all= Get-PnPListItem -list $documentlibrary -PageSize 1000
 $audit=[System.Collections.ArrayList]::new()
