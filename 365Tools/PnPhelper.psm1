@@ -17,7 +17,7 @@ else {
 
 
 try {	
-Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PnP PowerShell" -SharePointDelegatePermissions "AllSites.FullControl" -Tenant "1x4bs0.onmicrosoft.com" -Interactive -ErrorAction Stop
+Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PnP PowerShell" -SharePointDelegatePermissions "AllSites.FullControl", "User.Read.All" -Tenant "1x4bs0.onmicrosoft.com" -Interactive -ErrorAction Stop
 #  if not GA do Register-PnPManagementShellAccess -ShowConsentUrl and share Url with GA
 #get TenantId= Get-PnPTenntID
 }
@@ -63,14 +63,12 @@ function get-onedrivepnp {
  (Get-PnPUserProfileProperty -Account $upn).PersonalUrl
 }
 
-
 function get-pnpinventory { 
     
     param (
         $documentlibrary="/Documents",
         [string]$clientId=$env:PnP_Client_Id_lab,
         [switch]$siteurl,
-        [switch]$groupname,
         [switch]$upn
     )
     switch ($PSBoundParameters.Keys){
@@ -78,11 +76,8 @@ function get-pnpinventory {
 $siteurl{
  Connect-PnPOnline -url $siteurl -Interactive -ClientId $clientId
 }
-$groupname{
- Get-PnPGroup -Identity $groupname 
-}
 $upn{
-
+ Connect-PnP -siteurl (Get-OneDrivepnp -upn $upn)
 }
 
 
@@ -94,6 +89,7 @@ $audit=[System.Collections.ArrayList]::new()
 $all | % {
 #[string]$contenttypeid= $_.FieldValues.ContentTypeId
 #$contenttypeId.Startswith("0x0120")? "folder": "document"
+$parsedata= $_.FieldValues.MetaInfo | Convert-MetaInfoString -ErrorAction SilentlyContinue
    
 $audit.Add([PSCustomObject]@{
    Name = $_.FieldValues.FileLeafRef
@@ -103,6 +99,8 @@ $audit.Add([PSCustomObject]@{
    fileswithin= $_.FieldValues.ItemChildCount 
    #type= $contenttypeId.Startswith("0x0120")? "folder": "document"
    type= ($_.FieldValues.FSObjType -eq '0')? "file" : "folder"
+   sharedWith=  $parsedata._activity.FileActivityUsersOnPage.Id
+  
    
 
 }) | out-null
@@ -112,3 +110,53 @@ $audit
 }
 
 
+function Convert-MetaInfoString {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [string]$MetaInfo
+    )
+
+    begin {
+        # map short type codes to converters
+        $typeMap = @{
+            'IR' = { param($s) [int]$s }                    # integer
+            'TR' = { param($s) [datetime]$s }               # time
+            'SR' = { param($s) [string]$s }                 # string
+            'SW' = { param($s) [string]$s }                 # string (often wraps JSON)
+            'UR' = { param($s) [string]$s }                 # url/string
+            'BL' = { param($s) [bool]$s }                   # bool (seen occasionally)
+        }
+        $lineRegex = '^(?<key>[^:]+):(?<type>[^|]+)\|(?<val>.*)$'
+    }
+
+    process {
+        if (-not $MetaInfo) { return $null }
+
+        $out = [ordered]@{}
+        # MetaInfo lines are newline-separated; handle CRLF/LF and stray blanks
+        foreach ($line in ($MetaInfo -split "`r?`n" | Where-Object { $_ -ne '' })) {
+
+            if ($line -notmatch $lineRegex) { continue }
+
+            $key  = $Matches.key
+            $type = $Matches.type
+            $val  = $Matches.val
+
+            # convert by declared type if we know it; else keep string
+            if ($typeMap.ContainsKey($type)) {
+                try   { $val = & $typeMap[$type] $val } catch { }
+            }
+
+            # If the value *looks* like JSON, try to parse it
+            if ($val -is [string] -and $val.TrimStart() -match '^[\{\[]') {
+                try { $val = $val | ConvertFrom-Json -ErrorAction Stop } catch { }
+            }
+
+            $out[$key] = $val
+        }
+
+        # emit PSCustomObject
+        [PSCustomObject]$out
+    }
+}
