@@ -107,7 +107,7 @@ $audit.Add([PSCustomObject]@{
 
 }
 $audit
-}
+}                       
 
 
 function Convert-MetaInfoString {
@@ -159,4 +159,16 @@ function Convert-MetaInfoString {
         # emit PSCustomObject
         [PSCustomObject]$out
     }
+}
+
+forEach ($tes in $test) {
+    if ($tes.type -eq "file") {
+# Copy-PnPFile -SourceUrl "$($_.ParentFolder)/$($tes.name)"
+write-host "$($_.ParentFolder)/$($tes.name)"
+
+    }
+    elseif ($tes.type -eq $folder) {
+       
+    }
+
 }
