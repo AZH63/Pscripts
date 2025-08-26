@@ -17,7 +17,7 @@ else {
 
 
 try {	
-Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PnP PowerShell" -SharePointDelegatePermissions "AllSites.FullControl", "User.Read.All" -Tenant "1x4bs0.onmicrosoft.com" -Interactive -ErrorAction Stop
+Register-PnPEntraIDAppForInteractiveLogin -ApplicationName "PnP PowerShell" -SharePointDelegatePermissions "AllSites.FullControl", "User.Read.All" -Tenant "1x4bs0.onmicrosoft.com" 
 #  if not GA do Register-PnPManagementShellAccess -ShowConsentUrl and share Url with GA
 #get TenantId= Get-PnPTenntID
 }
@@ -45,7 +45,7 @@ Connect-PnPOnline -url $siteurl -Interactive -clientId $clientId
 }
 
 connect-PnP -siteurl (Get-OneDrivepnp -upn "alexw@1x4bs0.onmicrosoft.com")
- 
+ get-pnpinventory -siteurl "https://1x4bs0-my.sharepoint.com/personal/alexw_1x4bs0_onmicrosoft_com" 
 function get-onedrivepnp {
     <#
     .NOTES
@@ -56,7 +56,7 @@ function get-onedrivepnp {
     $adminurl="https://1x4bs0.sharepoint.com",
     [Parameter(Mandatory=$true)]
     $upn,
-    $clientid=$env:PnP_Client_Id)
+    $clientid=$env:PnP_Client_Id_lab)
 
 #app needneeds User.Profile.readall
  Connect-PnPOnline -url $adminurl -Interactive -clientId $clientid
@@ -66,29 +66,20 @@ function get-onedrivepnp {
 function get-pnpinventory { 
     
     param (
-        $documentlibrary="/Documents",
+        $documentlibrary="Documents",
         [string]$clientId=$env:PnP_Client_Id_lab,
-        [switch]$siteurl,
-        [switch]$upn
+        [string]$siteurl
+        #[switch]$upn
     )
-    switch ($PSBoundParameters.Keys){
-
-$siteurl{
+  
+# if use upn, make a param set and try using a diff switch if type error will be caused
  Connect-PnPOnline -url $siteurl -Interactive -ClientId $clientId
-}
-$upn{
- Connect-PnP -siteurl (Get-OneDrivepnp -upn $upn)
-}
-
-
-
-    }
-
 $all= Get-PnPListItem -list $documentlibrary -PageSize 1000
 $audit=[System.Collections.ArrayList]::new()
 $all | % {
 #[string]$contenttypeid= $_.FieldValues.ContentTypeId
 #$contenttypeId.Startswith("0x0120")? "folder": "document"
+
 $parsedata= $_.FieldValues.MetaInfo | Convert-MetaInfoString -ErrorAction SilentlyContinue
    
 $audit.Add([PSCustomObject]@{
@@ -100,7 +91,10 @@ $audit.Add([PSCustomObject]@{
    #type= $contenttypeId.Startswith("0x0120")? "folder": "document"
    type= ($_.FieldValues.FSObjType -eq '0')? "file" : "folder"
    sharedWith=  $parsedata._activity.FileActivityUsersOnPage.Id
-  
+   Id= $_.Id
+   Fullpath= "$($_.FieldValues.FileDirRef)\$($_.FieldValues.FileLeafRef)"
+   Shared2= Ger-PnPlistitempermission -list 
+   
    
 
 }) | out-null
@@ -108,7 +102,6 @@ $audit.Add([PSCustomObject]@{
 }
 $audit
 }                       
-
 
 function Convert-MetaInfoString {
     [CmdletBinding()]
@@ -161,14 +154,32 @@ function Convert-MetaInfoString {
     }
 }
 
-forEach ($tes in $test) {
-    if ($tes.type -eq "file") {
-# Copy-PnPFile -SourceUrl "$($_.ParentFolder)/$($tes.name)"
-write-host "$($_.ParentFolder)/$($tes.name)"
+$dest="https://1x4bs0.sharepoint.com/sites/ITGroup"
+$source= get-onedrivepnp -upn "alexw@1x4bs0.onmicrosoft.com"
 
-    }
-    elseif ($tes.type -eq $folder) {
-       
-    }
 
-}
+$sourcesite= Get-PnPInventory -siteurl $source
+$destsite= Get-PnPinventory -siteurl $dest
+
+foreach ( $dest in $destsite) {
+   $match= $source | Where { $_.Id -eq $dest.Id } | select -ExpandProperty sharedWith
+
+   <# if ($match) {
+   Set-PnPListPermission -identity $ #>
+   
+
+
+
+   }
+
+  
+
+$alexshare= import-csv -path $env:userprofile\downloads\Alexshare.csv
+
+$audit= Get-PnPInventory -siteurl "alexw@1x4bs0.onmicrosoft.com"
+
+
+
+
+
+
