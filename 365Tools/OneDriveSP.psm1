@@ -57,16 +57,40 @@ Function Get-OneDriveURL {
 }
 
 Function Remove-PeopleList {
-
+ [CmdletBinding()]
     param (
         [parameter(mandatory=$true,HelpMessage="enter in UPN")]
         [string]$user,
-        [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
+        [switch]$all,
+        [string]$domain="1x4bs0.ommicrosoft.com",
+        [parameter(HelpMessage="enter in displayNames")]
         [string[]]$sharers,
         [parameter(mandatory=$true,HelpMessage="enter in displayname (no email at this moment pls) of administrator currently logged in for if permissions are required")]
         [string]$adminUser="yoohooo"
     )
 
+    if ( $PSBoundParameters.ContainsKey('all')) {
+           
+    $sites= [System.Collections.ArrayList]::new()
+    
+    $sites.Add($(Get-OneDriveUrl))
+    $displayname= $user.split("@")[0] 
+    $end=$domain.replace(".","_")
+
+    $sites.Remove($($sites | Where { $_ -like "*$($displayname)_$end"}))
+
+
+
+    }
+if ( $PSBoundParameters.ContainsKey('all')) {
+
+    $urls= Get-OneDriveURL
+
+
+
+}
+else {
+   
     $displayNames= $sharers | %{
         if ($_ -like "*@*") {
               ($_.Split("@"))[0]
@@ -78,13 +102,16 @@ Function Remove-PeopleList {
       }
       
       }
+    
+
 $urls= $displayNames | % {
         
       Write-Verbose "grabbing URLs"
         Get-OneDriveURL -DisplayName $_ 
     }
-       
+}
     write-verbose "sites grabbed: $urls"
+   
     ForEach ($url in $urls) {
        
      try { write-verbose "attempting to remove user from $url with no site admin"
