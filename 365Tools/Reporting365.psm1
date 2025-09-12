@@ -24,7 +24,6 @@ Function Get-GroupInfoExport {
       )
       
       Begin {
-          Write-Verbose "Initializing variables and validating input..."
           $results = [System.Collections.ArrayList]::new()
 
           $csvname = Read-Host "Enter the name for the resulting CSV file (without extension)"
@@ -49,13 +48,17 @@ Function Get-GroupInfoExport {
                   Write-verbose "Groups found for '$searchstr': $($groups)" 
                    
                   foreach ($group in $groups) {
-                      Write-Verbose "Processing group: $($group.DisplayName)"
+                      Write-Verbose "Processing group: $($($group.DisplayName))"
                       
                       if ($PSBoundParameters.ContainsKey('messages') ){
-                        $trace= get-messagetracev2 -RecipientAddress $_ -StartDate (( get-date).AddDays(-10)) -EndDate (Get-date) -ResultSize 10
-
+                        $trace= try {get-messagetracev2 -RecipientAddress $group.PrimarySmtpAddress -StartDate (( get-date).AddDays(-10)) -EndDate (Get-date) -ResultSize 10 -ErrorAction Stop
+                          Start-Sleep -Milliseconds 500
+                        }
+                        catch {
+                           write-warning " unable to trace $group  $($Error[0])" 
+                        }
                       }
-                    $members=Get-distributiongroupmember -Identity $group | select -ExpandProperty PrimarySmtpAddress
+                    $members=Get-distributiongroupmember -Identity $group.PrimarySmtpAddress | select -ExpandProperty PrimarySmtpAddress
                   
                       $Results.Add( [PSCustomObject]@{
                           GroupName    = $group.PrimarySmtpAddress

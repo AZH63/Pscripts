@@ -61,9 +61,14 @@ Function Remove-PeopleList {
     param (
         [parameter(mandatory=$true,HelpMessage="enter in UPN")]
         [string]$user,
+<<<<<<< Updated upstream
         [switch]$all,
         [string]$domain="1x4bs0.ommicrosoft.com",
         [parameter(HelpMessage="enter in displayNames")]
+=======
+        
+        [parameter(mandatory=$true,HelpMessage="enter in displayNames")]
+>>>>>>> Stashed changes
         [string[]]$sharers,
         [parameter(mandatory=$true,HelpMessage="enter in displayname (no email at this moment pls) of administrator currently logged in for if permissions are required")]
         [string]$adminUser="yoohooo"
