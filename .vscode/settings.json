@@ -1,3 +1,4 @@
 {
-    "azureAutomation.directory.basePath": "c:\\Users\\AzariaHorton"
+    "azureAutomation.directory.basePath": "c:\\Users\\AzariaHorton",
+    "powershell.buttons.showPanelMovementButtons": false
 }
