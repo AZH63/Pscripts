@@ -82,7 +82,12 @@ $testCsv=[ordered]@{
 }
 
   
+$testCsv | % {
 
+
+
+    
+}
 
 function Get-BoundParameters {
 
