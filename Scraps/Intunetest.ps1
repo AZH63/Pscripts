@@ -65,6 +65,21 @@ $sucesslog | out-file -path "$path"+ "successlog.txt"
 }
 
 
+$results= Get-Mgbetaauditlogsignin -filter "AppDisplayName eq 'Windows Sign In'" -All | % {
+ $userdetails= Get-mgbetauser -userid ($_.UserPrincipalName) | Select Jobtitle, Department
+$manager= Get-mgbetausermanager -userid ($_.UserPrincipalName)
+[pscustomobject]@{
+
+    userPrincipalName = $_.UserPrincipalName
+    DeviceId= $_.DeviceDetail.DeviceId
+    DeviceDisplayName= $_.DeviceDetail.DisplayName
+    Department= $userdetails.Department
+    Jobtitle= $userdetails.Jobtitle
+    Manager= $manager.UserPrincipalName
+
+
+}
+}
 
 
 
@@ -86,7 +101,7 @@ $testCsv | % {
 
 
 
-    
+
 }
 
 function Get-BoundParameters {
@@ -104,4 +119,28 @@ $PSBoundParameters
 
 $users=Get-MgBetauser -all 
 
-$operations= $users | Where { $_.Department -like "*operations*" -or $_.Department -like "*Warehouse*" -or $_.Department -like "*420*" -and $_.EmployeeType -like "*Administrative*" }
+$operations= $users | Where {( $_.Department -like "*operations*" -or $_.Department -like "*413*" -or $_.Department -like "*414*" -or   $_.Department -like "*415*" -or $_.Department -like "*420*" -or $_.Department -like "*418*" -or $_.Department -like "*419*" ) -and ( $_.EmployeeType -like "*Salary*" -or $_.Jobtitle -like "*supervisor*" -or $_.Jobtitle -like "*manager*" -or $_.EmployeeType -like "*Administrative*" )}
+
+
+$operations = $users | Where-Object {
+    ($_.Department -match "operations|413|414|415|418|419|420|399") -and
+    ($_.EmployeeType -match "Salary|Administrative" -or $_.JobTitle -match "supervisor|manager")
+} | select UserPrincipalName, DisplayName
+
+
+$logs= import-csv -path $env:USERPROFILE\downloads\Devicessigninlogs.csv
+
+$operations= import-csv -path $env:userprofile\downloads\ops.csv
+$operations | % {
+
+[pscustomobject]@{
+DisplayName= $_.Employees
+UserPrincipalName = $_.UPN
+DeviceID= ($logs | Where { $_.Name -eq $_.UPN} ).DeviceId
+ DeviceDisplayName=($logs | Where { $_.Name -eq $_.UPN}).DeviceDisplayName
+  
+
+
+}
+
+} | tee-object -variable test
