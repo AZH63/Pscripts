@@ -65,23 +65,55 @@ $sucesslog | out-file -path "$path"+ "successlog.txt"
 }
 
 
-$results= Get-Mgbetaauditlogsignin -filter "AppDisplayName eq 'Windows Sign In'" -All | % {
- $userdetails= Get-mgbetauser -userid ($_.UserPrincipalName) | Select Jobtitle, Department
-$manager= Get-mgbetausermanager -userid ($_.UserPrincipalName)
+
+
+
+
+# commented out queries run too long so getting ntwk timeouts, plan to 
+
+$devices= import-csv -path "C:\Users\User\Downloads\Devices Joined + No MDM.csv"
+
+$30d= (Get-Date).AddDays(-30) | format 
+$signinlogs= Get-Mgbetaauditlogsignin -filter "AppDisplayName eq 'Windows Sign In'" -All | % {
+ #$userdetails= try {Get-mgbetauser -userid ($_.UserPrincipalName) | Select Jobtitle, Department -ErrorAction Stop} catch {"there was an error"}
+
+# $manager= try {Get-mgbetausermanager -userid ($_.UserPrincipalName) -erroraction Stop } catch { write-warning "user has no manager"}
 [pscustomobject]@{
 
     userPrincipalName = $_.UserPrincipalName
     DeviceId= $_.DeviceDetail.DeviceId
     DeviceDisplayName= $_.DeviceDetail.DisplayName
-    Department= $userdetails.Department
-    Jobtitle= $userdetails.Jobtitle
-    Manager= $manager.UserPrincipalName
+    #Department= ($userdetails -eq "there was an error" )? "null": $userdetails.Department
+    #Jobtitle= ($userdetails -eq "there was an error" )? "null": $userdetails.Jobtitle 
+    #Manager= ($manager -eq $null -or $manager -eq "user has no manager")? "user has no manager": $manager.AdditionalProperties.UserPrincipalName
+    date= $_.CreatedDateTime
 
 
 }
 }
+$devices=import-csv -path "C:\Users\User\Downloads\DevicesJoined.csv"
+$signinlogs= import-csv -path "C:\Users\User\Downloads\signinlogs10_6.csv"
+$moreinfo= forEach ($device in $devices) {
+   $users=$signinlogs | Where {$_.DeviceId -eq $device.deviceId} | select userPrincipalName, DeviceDisplayName, DeviceId,date
 
+   $users | % {
+$userinfo= try {Get-MgBetaUser -userid $($_.userPrincipalName) | select Department, Jobtitle, OfficeLocation -erroraction SilentlyContinue } catch { "offboarded"}
+$manager= try  {get-mgbetausermanager -userid $($_.userPrincipalName) -errorAction SilentlyContinue} catch { "null"} 
+[pscustomObject]@{
 
+  upn= ($userinfo -eq "offboarded")? "offboarded":$_.userPrincipalName
+  dept= ($userinfo -eq "offboarded")? "offboarded":$userinfo.department
+  manager=($manager -eq "null")? "null": $manager.AdditionalProperties.userPrincipalName   
+  deviceused= $_.DeviceDisplayName
+  Deviceid= $_.DeviceId
+  date= $_.date
+  officelocation= $userinfo.OfficeLocation
+}
+
+   }
+} 
+
+Invoke-MgGraphRequest -Uri  "https://graph.microsoft.com/beta/auditLogs/signIns$filter=CreatedDateTime ge $30d " -method GET
 
 #doesn't exist in intune already
 #
@@ -103,6 +135,23 @@ $testCsv | % {
 
 
 }
+
+$groups | % {
+
+[pscustomobject]@{
+
+ email= $_
+ MessageTrace=  Get-messagetracev2 -RecipientAddress $_ -StartDate (Get-date).AddDays(-10) -EndDate (Get-date)
+
+
+
+}
+
+
+} | Tee-Object -variable messages
+
+
+
 
 function Get-BoundParameters {
 
@@ -144,3 +193,5 @@ DeviceID= ($logs | Where { $_.Name -eq $_.UPN} ).DeviceId
 }
 
 } | tee-object -variable test
+
+
