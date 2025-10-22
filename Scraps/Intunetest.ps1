@@ -64,7 +64,17 @@ $sucesslog | out-file -path "$path"+ "successlog.txt"
 
 }
 
+function Get-Logs {
+ 
+ [Parameter(Mandatory=$true)]
+ [string]$reportpath,
+ [integer]$days
 
+$devices = import-csv -path $reportpath
+
+
+
+}
 
 
 
