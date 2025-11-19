@@ -377,4 +377,36 @@ write-warning "probably a license group" $error
 }
 }
 
-Set-DynamicDistributionGroup -Name “All_Sales” -RecipientFilter "(RecipientTypeDetails -eq 'UserMailbox') -and ((Department -like 'Sales*') -or (Department -in ["780","862","300","912"] ) )  -and (-not(CustomAttribute1 -eq 'Disabled'))"
+
+Function get-entrainfo {
+
+param (
+    [parameter(Mandatory=$true)]
+[string[]]$upn
+
+)
+$notfound=[System.Collections.Generic.List[object]]::new()
+
+$upn | % {
+
+    try {
+ Get-MgBetauser -filter "userPrincipalName eq '$_'" | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Stop
+   Get-MgUserManager -userid $_ | select Additional Properties tee-object -variable man
+}
+    catch {
+  $notfound.Add("$_" + $error[0])
+
+    }
+
+[PSCustomObject]@{
+    Upn = $_.userPrincipalName
+    "First and Last"= $_.DisplayName
+     Department= $_.Department
+    Employeeid= $_.EmployeeId
+     Manager= $man.AdditionalProperties.userPrincipalName
+}
+
+
+}
+
+}
