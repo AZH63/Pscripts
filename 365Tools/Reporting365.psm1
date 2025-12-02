@@ -88,7 +88,52 @@ Function Get-GroupInfoExport {
           }
       }
     }
-    
+    function get-groupinfo {
+      param (
+          [Parameter(ValueFromPipeline=$true)]
+          [string[]]$searchstr,
+          [switch]$messages,
+          [Parameter(ParameterSetName="export")]
+          [switch]$export
+          
+  
+      )
+  
+      
+     $groups= $searchstr | get-distributiongroup -ErrorAction SilentlyContinue
+  
+  if ($null -eq $groups) {
+  
+  write-verbose "no groups found"
+  return 
+  
+  }
+  
+  if ($groups -ne $searchstr) {
+  
+      $comp=Compare-Object -ReferenceObject $searchstr -DifferenceObject $groups
+     $diff= $comp | Where { $_.SideIndicator -eq "=>" }
+  
+  write-verbose "missing groups are $diff"
+  }
+  
+  $exoresults= $groups | Get-distributiongroup | select PrimarySMTPaddress, GroupType,HiddenFromAddressListsEnabled,ManagedBy,LastChanged
+  
+  
+  $completed= $exoresults | % { 
+    [PSCustomObject]@{
+      GroupName    = $_.PrimarySmtpAddress
+      GroupTypes   = $_.GroupType
+      Hidden       = $_.HiddenFromAddressListsEnabled
+      CreatedDate  = $_.WhenCreated
+      LastChanged  = $_.WhenChanged
+      ManagedBy    = ($_.ManagedBy | ForEach-Object { $_.DisplayName }) -join ', '
+      Members      = Get-distributiongroupmember -identity $($_.PrimarySmtpAddress) | select -ExpandProperty PrimarySmtpAddress
+    }
+  
+  } 
+}
+   
 
 
 

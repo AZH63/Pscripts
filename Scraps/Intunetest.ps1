@@ -123,6 +123,26 @@ $manager= try  {get-mgbetausermanager -userid $($_.userPrincipalName) -errorActi
    }
 } 
 
+
+
+Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/v1.0/auditLogs/signIns/$batch" -Body
+
+
+
+Get-Mgbetaauditlogsignin -filter "AppDisplayName eq 'Windows Sign In'"
+
+GET /beta/auditLogs/signIns?$filter=appDisplayName eq 'Windows Sign In'
+
+
+
+
+
+
+
+
+
+
+
 Invoke-MgGraphRequest -Uri  "https://graph.microsoft.com/beta/auditLogs/signIns$filter=CreatedDateTime ge $30d " -method GET
 
 #doesn't exist in intune already
