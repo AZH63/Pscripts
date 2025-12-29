@@ -9,90 +9,13 @@ disable users, convert mailboxes, and more.
 
 
 #>
-function Connect-AZTools {
-    <#
-    .SYNOPSIS
-    Authenticates to exchange online and entra.
-
-    .DESCRIPTION
-    Connects to Microsoft Graph, AzureAD and Exchange Online.
-
-    .EXAMPLE
-    Connect-AZTools
-    #>
-
-    do {
-    $choice= Read-Host "make sure roles are activated and choose a module to login `n 1. graph 2. exchange. 3. AzureAD 4. exit"
-    Switch ($choice) {
-    1 {Connect-MgGraph -Scopes "User.ReadWrite.All", "Group.ReadWrite.All", "Mail.ReadWrite"}
-    2 {Connect-ExchangeOnline }
-    3 {Connect-AzureAD }
-    4{break}
-    }
-}
-    while ($choice -ne 4) 
-}
 
 
 
 
-Function Update-CustomAttribute1 {
-    #have the other fx return email
-param (
-    [parameter(mandatory)]
-    [string[]]$Users
-)
-$AzureInfo= $Users | ForEach-Object {
-    $User= $_  # assigns the pipeline to the $User variable for convenience
-    
-    $AzureUser = Get-AzureADUSER -filter "UserPrincipalName eq '$User'" | Select-Object  AccountEnabled, UserPrincipalName
-     if ($AzureUser) {
-        $AzureUser
-     }
-    else {
-    write-warning " User $User not found in Azure "
-    
-    }
-    
-    }
-    
-$AzureInfo | ForEach-Object {
-    if ( $_.AccountEnabled -eq $false) {
-     write-verbose " $($_.UserPrincipalName) is disabled"
-    }
-  else { write-verbose " $($_.UserPrincipalName) is enabled" }
-  
-    
-    }
-    }
 
 
 
-Function Update-DDLSAzureAD {
-
-    
-    param ( 
-    [parameter(mandatory)]
-    [string[]]$GroupsToSearch )
-    
-    
-    ForEach ($group in $GroupsToSearch) {
-        $groupstr= $Group.Trim()
-    try {
-    $distmembers=Get-DynamicDistributionGroupMember -identity $groupstr | Select -ExpandProperty PrimarySmtpAddress
-    write-verbose "group $groupstr has these members:$( $distmembers | format-table)"
-    Update-CustomAttribute1 -Users $distmembers
-       }
-     catch {
-    write-warning "check grouptype"
-     }
-       
-    
-    }
-    $AzureInfo= $distmembers | ForEach-Object {Get-AzureADUser -identity $_.PrimarySmtpAddress | Select AccountEnabled, UserPrincipalName }
-    $AzureInfo
-    
-}
 
 
 Function Update-PrimarySmtpAddress {
@@ -393,8 +316,9 @@ $notfound=[System.Collections.Generic.List[object]]::new()
 $upn | % {
 
     try {
- $userobj= Get-MgBetauser -UserId $_ | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Break
-   write-verbose "pipeline $_"
+ $userobj= Get-MgBetauser -UserId $_ | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Stop
+   
+ write-verbose "pipeline $_"
   $man= Get-MgBetaUserManager -UserId $_ 
    
 }
@@ -413,5 +337,6 @@ $upn | % {
 
 
 }
+write-verbose "users not found and their error $notfound"
 
 }
