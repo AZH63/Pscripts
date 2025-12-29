@@ -92,10 +92,7 @@ Function Get-GroupInfoExport {
       param (
           [Parameter(ValueFromPipeline=$true)]
           [string[]]$searchstr,
-          [switch]$messages,
-          [Parameter(ParameterSetName="export")]
-          [switch]$export
-          
+          [switch]$messages
   
       )
   

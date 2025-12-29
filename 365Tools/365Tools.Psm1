@@ -383,17 +383,21 @@ write-warning "probably a license group" $error
 Function get-entrainfo {
 
 param (
+    
     [parameter(Mandatory=$true)]
 [string[]]$upn
 
 )
 $notfound=[System.Collections.Generic.List[object]]::new()
+$details=[System.Collections.Generic.List[object]]::new()
 
 $upn | % {
 
     try {
- Get-MgBetauser -filter "userPrincipalName eq '$_'" | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Stop
-   Get-MgUserManager -userid $_ | select Additional Properties tee-object -variable man
+ $userobj= Get-MgBetauser -UserId $_ | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Break
+   write-verbose "pipeline $_"
+  $man= Get-MgBetaUserManager -UserId $_ 
+   
 }
     catch {
   $notfound.Add("$_" + $error[0])
@@ -401,10 +405,10 @@ $upn | % {
     }
 
 [PSCustomObject]@{
-    Upn = $_.userPrincipalName
-    "First and Last"= $_.DisplayName
-     Department= $_.Department
-    Employeeid= $_.EmployeeId
+    Upn = $userobj.userPrincipalName
+    "First and Last"= $userobj.DisplayName
+     Department= $userobj.Department
+    Employeeid= $userobj.EmployeeId
      Manager= $man.AdditionalProperties.userPrincipalName
 }
 
