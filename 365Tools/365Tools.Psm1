@@ -389,7 +389,6 @@ param (
 
 )
 $notfound=[System.Collections.Generic.List[object]]::new()
-$details=[System.Collections.Generic.List[object]]::new()
 
 $upn | % {
 
