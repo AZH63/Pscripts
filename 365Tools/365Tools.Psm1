@@ -17,7 +17,7 @@ disable users, convert mailboxes, and more.
 
 
 
-
+    
 Function Update-PrimarySmtpAddress {
     <#
     .Synopsis 
@@ -106,7 +106,7 @@ $userid= Get-mgBetaUser -UserId $m | select -ExpandProperty Id
 $groups= get-mgBetaUserMemberOf -userid ($m)
  
 $groups | % {
-    $groupid= $_.Id
+    $groupid= $entry.Id
    if ($_.GroupTypes -notlike "*DynamicMembership*") {      
  write-verbose  " not dynamic $($_.AdditionalProperties.mail) $groupid "
  try {
@@ -313,30 +313,45 @@ param (
 )
 $notfound=[System.Collections.Generic.List[object]]::new()
 
-$upn | % {
-
+forEach ($entry in $upn) {
+$userobj= $null 
+    
     try {
- $userobj= Get-MgBetauser -UserId $_ | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Stop
-   
- write-verbose "pipeline $_"
-  $man= Get-MgBetaUserManager -UserId $_ 
-   
-}
-    catch {
-  $notfound.Add("$_" + $error[0])
-
+ $userobj= Get-MgBetauser -UserId $entry | select UserPrincipalName,Mail,DisplayName,Department,EmployeeId -ErrorAction Stop
+ write-verbose "fed is $entry user found: $userobj" 
     }
+    catch {
+        $notfound.Add($entry)
+        continue
+    } #error fail
+ if (!$userobj) {
+     write-verbose "nothin found"
+    $notfound.Add($entry)
+    continue
+ } #stop simple empties that don't error
+   
+ write-verbose "pipeline $entry"
 
+  $man= try  {Get-MgBetaUserManager -UserId $entry -erroraction stop } catch { }
+  
+  
+  if ($man) {
+   $manager= $man.AdditionalProperties.userPrincipalName
+
+  }
+  #manager needs to be handled cause graph
+ 
 [PSCustomObject]@{
     Upn = $userobj.userPrincipalName
     "First and Last"= $userobj.DisplayName
      Department= $userobj.Department
     Employeeid= $userobj.EmployeeId
-     Manager= $man.AdditionalProperties.userPrincipalName
+     Manager= $manager
 }
+ 
 
 
-}
 write-verbose "users not found and their error $notfound"
 
+}
 }
